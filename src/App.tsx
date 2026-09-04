@@ -8,6 +8,7 @@ import ThisWeek from './pages/ThisWeek';
 import Clients from './pages/Clients';
 import ClientReports from './pages/ClientReports';
 import ReportView from './pages/ReportView';
+import Settings from './pages/Settings';
 
 /**
  * Routing and the session gate.
@@ -50,6 +51,7 @@ export default function App() {
       <Routes>
         <Route path="/" element={<ThisWeek />} />
         <Route path="/clients" element={<Clients />} />
+        <Route path="/settings" element={<Settings />} />
         <Route path="/client/:workplaceId" element={<ClientReports />} />
         <Route path="/client/:workplaceId/report/:reportKey" element={<ReportView />} />
         {/* Someone following an invite link while already signed in has already been linked by

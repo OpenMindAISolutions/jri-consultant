@@ -48,3 +48,38 @@ honestly on a new one.
 
 A snapshot is written when **the business** opens a report, not when it is shared. Figures can be
 months old. Every screen shows how old they are, and `ReportView` says so in words. Never remove that.
+
+## WhatsApp
+
+The connection belongs to **the consultant or their firm — never to a workplace**. Their number,
+their Meta account, their consent obligation. Firm connection wins over a personal one, because in a
+practice the firm's number is the one clients recognise.
+
+Two routes, both supported:
+
+- **`meta_direct`** — they paste their own Meta credentials. The access token is encrypted with
+  `pgp_sym_encrypt` under the `app.consultant_secret_key` GUC, and the column is revoked from
+  `authenticated` **by name** so it is unreadable even to someone who can read the row.
+  Only `service_role` can decrypt it, and only through `take_whatsapp_send_job`.
+- **`bsp`** — a Business Solution Provider holds the secret and we keep a reference.
+
+**Two rules live in the database, not in the sender:** no message without a Meta-approved template,
+and no message without recorded consent from that number. `queue_consultant_whatsapp` enforces both,
+so the send function only ever delivers what was already approved.
+
+**What is not built:** the function that actually calls Meta. Everything up to and including the
+queue is done and tested; delivery needs a real Meta account and approved templates, which is days
+of external review and cannot be written blind.
+
+## Deployment
+
+Static site. Two environment variables:
+
+```
+VITE_SUPABASE_URL=        # same Supabase project as the business app
+VITE_SUPABASE_ANON_KEY=
+VITE_USER_APP_URL=        # optional — where to send someone who is a business owner
+```
+
+`npm run build` emits `dist/`. Point the host at it with SPA fallback to `index.html`, or deep links
+like `/invite?token=…` will 404.

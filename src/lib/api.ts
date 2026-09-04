@@ -162,3 +162,68 @@ export const addFirmMember = (firmId: string, email: string) =>
 
 export const assignLinkToFirm = (linkId: string, firmId: string | null) =>
   call<null>('assign_link_to_firm', { p_link_id: linkId, p_firm_id: firmId });
+
+// ── WhatsApp: the consultant's OWN account ──────────────────────────────────
+// Never workplace-scoped. Their number, their Meta account, their consent obligation.
+
+export interface WaTemplate {
+  id: string; template_name: string; purpose: string;
+  language_code: string; approved: boolean; body_preview: string | null;
+}
+export interface WaOptin {
+  phone_e164: string; display_name: string | null;
+  workplace_id: string | null; active: boolean;
+}
+export interface WaMessage {
+  phone_e164: string; purpose: string | null; status: string;
+  error: string | null; created_at: string;
+}
+export type WhatsAppOverview =
+  | { connected: false }
+  | {
+      connected: true;
+      connection: {
+        id: string; provider: 'meta_direct' | 'bsp'; display_name: string | null;
+        phone_e164: string | null; status: string; last_error: string | null;
+        owned_by_firm: boolean;
+      };
+      templates: WaTemplate[];
+      optins: WaOptin[];
+      recent: WaMessage[];
+    };
+
+export const whatsappOverview = () => call<WhatsAppOverview>('consultant_whatsapp_overview');
+
+/** The access token is written straight into the database and encrypted there — it is never read back. */
+export const connectWhatsApp = (p: {
+  provider: 'meta_direct' | 'bsp';
+  displayName?: string; phoneE164?: string;
+  phoneNumberId?: string; businessAccountId?: string; accessToken?: string;
+  bspName?: string; bspReference?: string; firmId?: string | null;
+}) => call<string>('connect_consultant_whatsapp', {
+  p_provider: p.provider, p_display_name: p.displayName ?? null, p_phone_e164: p.phoneE164 ?? null,
+  p_phone_number_id: p.phoneNumberId ?? null, p_business_account_id: p.businessAccountId ?? null,
+  p_access_token: p.accessToken ?? null, p_bsp_name: p.bspName ?? null,
+  p_bsp_reference: p.bspReference ?? null, p_firm_id: p.firmId ?? null,
+});
+
+export const disconnectWhatsApp = (connectionId: string) =>
+  call<null>('disconnect_consultant_whatsapp', { p_connection_id: connectionId });
+
+export const saveWhatsAppTemplate = (
+  connectionId: string, templateName: string, purpose: string,
+  language = 'en', bodyPreview: string | null = null, approved = false,
+) => call<string>('upsert_consultant_whatsapp_template', {
+  p_connection_id: connectionId, p_template_name: templateName, p_purpose: purpose,
+  p_language_code: language, p_body_preview: bodyPreview, p_approved: approved,
+});
+
+export const recordOptin = (
+  connectionId: string, phone: string, displayName: string | null, workplaceId: string | null = null,
+) => call<string>('record_whatsapp_optin', {
+  p_connection_id: connectionId, p_phone_e164: phone,
+  p_display_name: displayName, p_workplace_id: workplaceId,
+});
+
+export const recordOptout = (connectionId: string, phone: string) =>
+  call<null>('record_whatsapp_optout', { p_connection_id: connectionId, p_phone_e164: phone });
