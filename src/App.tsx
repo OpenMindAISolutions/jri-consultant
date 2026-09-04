@@ -4,6 +4,7 @@ import type { Session } from '@supabase/supabase-js';
 import { supabase } from './lib/supabase';
 import { Shell, Spinner } from './components/Shell';
 import SignIn from './pages/SignIn';
+import ThisWeek from './pages/ThisWeek';
 import Clients from './pages/Clients';
 import ClientReports from './pages/ClientReports';
 import ReportView from './pages/ReportView';
@@ -47,7 +48,8 @@ export default function App() {
   return (
     <Shell email={session.user.email}>
       <Routes>
-        <Route path="/" element={<Clients />} />
+        <Route path="/" element={<ThisWeek />} />
+        <Route path="/clients" element={<Clients />} />
         <Route path="/client/:workplaceId" element={<ClientReports />} />
         <Route path="/client/:workplaceId/report/:reportKey" element={<ReportView />} />
         {/* Someone following an invite link while already signed in has already been linked by

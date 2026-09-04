@@ -1,7 +1,11 @@
-import { useEffect, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { ArrowLeft, FileText, Inbox } from 'lucide-react';
-import { clientReports, myClients, type SharedReport, type Client } from '../lib/api';
+import {
+  clientReports, myClients, clientActivity,
+  type SharedReport, type Client, type ClientActivity,
+} from '../lib/api';
+import { Collaboration } from '../components/Collaboration';
 import { reportName, reportCategory } from '../lib/reportNames';
 import { howLongAgo } from '../lib/format';
 import { Empty, Spinner, Freshness } from '../components/Shell';
@@ -11,18 +15,22 @@ export default function ClientReports() {
   const { workplaceId = '' } = useParams();
   const [reports, setReports] = useState<SharedReport[]>([]);
   const [client, setClient] = useState<Client | null>(null);
+  const [activity, setActivity] = useState<ClientActivity | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  useEffect(() => {
-    Promise.all([clientReports(workplaceId), myClients()])
-      .then(([rows, clients]) => {
+  const load = useCallback(() => {
+    return Promise.all([clientReports(workplaceId), myClients(), clientActivity(workplaceId)])
+      .then(([rows, clients, act]) => {
         setReports(rows ?? []);
         setClient((clients ?? []).find((c) => c.workplace_id === workplaceId) ?? null);
+        setActivity(act);
       })
       .catch((e) => setError(e instanceof Error ? e.message : 'Could not load this client.'))
       .finally(() => setLoading(false));
   }, [workplaceId]);
+
+  useEffect(() => { void load(); }, [load]);
 
   if (loading) return <Spinner />;
   if (error) {
@@ -96,6 +104,15 @@ export default function ClientReports() {
             </section>
           ))}
         </div>
+      )}
+
+      {activity && (
+        <section className="mt-8">
+          <h2 className="type-eyebrow text-muted-foreground">Working with them</h2>
+          <div className="mt-2.5">
+            <Collaboration activity={activity} onChanged={() => { void load(); }} />
+          </div>
+        </section>
       )}
     </div>
   );

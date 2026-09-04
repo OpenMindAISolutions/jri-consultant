@@ -22,6 +22,10 @@ export function Shell({ children, email }: { children: ReactNode; email?: string
               <span className="type-eyebrow text-muted-foreground">for consultants</span>
             </span>
           </Link>
+          <nav className="flex items-center gap-1">
+            <Link to="/" className="rounded-lg px-2.5 py-1.5 text-xs font-medium text-muted-foreground transition hover:text-foreground">This week</Link>
+            <Link to="/clients" className="rounded-lg px-2.5 py-1.5 text-xs font-medium text-muted-foreground transition hover:text-foreground">Clients</Link>
+          </nav>
           <div className="flex items-center gap-3">
             {email && <span className="hidden text-xs text-muted-foreground sm:inline">{email}</span>}
             <button
