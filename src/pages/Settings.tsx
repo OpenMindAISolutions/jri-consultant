@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { MessageCircle, Building2, Plus, Trash2, ShieldCheck, Loader2, AlertTriangle } from 'lucide-react';
 import {
   whatsappOverview, connectWhatsApp, disconnectWhatsApp, saveWhatsAppTemplate,
-  recordOptin, recordOptout, createFirm, addFirmMember,
+  recordOptin, recordOptout, createFirm, addFirmMember, myFirm,
   type WhatsAppOverview,
 } from '../lib/api';
 import { Spinner } from '../components/Shell';
@@ -42,6 +42,21 @@ export default function Settings() {
   const [firmName, setFirmName] = useState('');
   const [memberEmail, setMemberEmail] = useState('');
   const [firmId, setFirmId] = useState<string | null>(null);
+  const [firmLabel, setFirmLabel] = useState<string | null>(null);
+
+  // Load the firm you ALREADY have. Without this, firmId was set only by createFirm, so a reload
+  // hid the add-colleague block and a firm created yesterday was unreachable today.
+  useEffect(() => {
+    let cancelled = false;
+    void myFirm()
+      .then((f) => {
+        if (cancelled || !f) return;
+        setFirmId(f.id);
+        setFirmLabel(f.name);
+      })
+      .catch(() => { /* no firm, or not reachable — the create path stays available */ });
+    return () => { cancelled = true; };
+  }, []);
 
   const load = useCallback(async () => {
     try { setWa(await whatsappOverview()); setError(null); }
@@ -84,17 +99,25 @@ export default function Settings() {
           A firm lets colleagues work your clients without sharing your login — so who did what stays
           on the record. Solo? You can skip this entirely.
         </p>
-        <div className="mt-3 flex flex-wrap gap-2">
-          <input className={`${input} max-w-xs`} placeholder="Firm name"
-            value={firmName} onChange={(e) => setFirmName(e.target.value)} />
-          <button type="button" disabled={busy || !firmName.trim()} className={btn}
-            style={{ background: 'hsl(var(--jri-lavender))' }}
-            onClick={() => void run(async () => {
-              const id = await createFirm(firmName.trim()); setFirmId(id); setFirmName('');
-            })}>
-            <Plus className="h-3.5 w-3.5" /> Create firm
-          </button>
-        </div>
+        {firmId ? (
+          <p className="mt-3 text-sm">
+            <span className="font-medium">{firmLabel ?? 'Your firm'}</span>
+            <span className="text-muted-foreground"> · hand a client to a colleague from the Clients screen.</span>
+          </p>
+        ) : (
+          <div className="mt-3 flex flex-wrap gap-2">
+            <input className={`${input} max-w-xs`} placeholder="Firm name"
+              value={firmName} onChange={(e) => setFirmName(e.target.value)} />
+            <button type="button" disabled={busy || !firmName.trim()} className={btn}
+              style={{ background: 'hsl(var(--jri-lavender))' }}
+              onClick={() => void run(async () => {
+                const id = await createFirm(firmName.trim());
+                setFirmId(id); setFirmLabel(firmName.trim()); setFirmName('');
+              })}>
+              <Plus className="h-3.5 w-3.5" /> Create firm
+            </button>
+          </div>
+        )}
         {firmId && (
           <div className="mt-3 flex flex-wrap gap-2 border-t border-border pt-3">
             <input className={`${input} max-w-xs`} placeholder="Colleague's email"

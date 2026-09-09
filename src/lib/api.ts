@@ -163,6 +163,25 @@ export const addFirmMember = (firmId: string, email: string) =>
 export const assignLinkToFirm = (linkId: string, firmId: string | null) =>
   call<null>('assign_link_to_firm', { p_link_id: linkId, p_firm_id: firmId });
 
+export interface MyFirm {
+  id: string;
+  name: string;
+  owner_profile_id: string;
+  is_owner: boolean;
+  members: { profile_id: string; name: string; email: string; role: string; added_at: string }[];
+  /** Client links already handed to the firm, so a list can render its toggle from one call. */
+  firm_link_ids: string[];
+}
+
+/**
+ * The firm you own or belong to, or null.
+ *
+ * Until this existed, `firmId` lived only in the component state that `createFirm` set — so a
+ * reload lost it, the add-colleague block behind it disappeared, and nothing could ever learn a
+ * firm id to hand a client to a junior with.
+ */
+export const myFirm = () => call<MyFirm | null>('consultant_my_firm');
+
 // ── WhatsApp: the consultant's OWN account ──────────────────────────────────
 // Never workplace-scoped. Their number, their Meta account, their consent obligation.
 
