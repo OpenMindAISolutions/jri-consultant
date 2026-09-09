@@ -31,7 +31,17 @@ export default function SignIn() {
     try {
       if (mode === 'up') {
         const { error: e1 } = await supabase.auth.signUp({
-          email: email.trim(), password, options: { data: { name } },
+          email: email.trim(),
+          password,
+          options: {
+            data: { name },
+            // WITHOUT THIS the confirmation email sends people to SITE_URL, which is the BUSINESS
+            // app (user.jri.ai) — a consultant confirms their address and lands in an application
+            // they have no account for and no reason to see. It happened on the first real
+            // invitation. Come back here instead, carrying the token so the invite is claimed on
+            // arrival rather than lost.
+            emailRedirectTo: `${window.location.origin}/invite${token ? `?token=${encodeURIComponent(token)}` : ''}`,
+          },
         });
         if (e1) throw e1;
         const { data: sess } = await supabase.auth.getSession();

@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import type { Session } from '@supabase/supabase-js';
 import { supabase } from './lib/supabase';
+import { acceptInvite } from './lib/api';
 import { Shell, Spinner } from './components/Shell';
 import { CommandPalette } from './components/CommandPalette';
 import SignIn from './pages/SignIn';
@@ -32,6 +33,28 @@ export default function App() {
     const { data: sub } = supabase.auth.onAuthStateChange((_e, s) => setSession(s));
     return () => sub.subscription.unsubscribe();
   }, []);
+
+  /**
+   * Claim any invitation waiting for this person, on EVERY arrival with a session.
+   *
+   * This used to happen only on the sign-in form's submit, which quietly assumed the account is
+   * created and the invite claimed in one unbroken visit. Email confirmation breaks that
+   * assumption: you sign up, you leave for your inbox, you come back — and on the way back the
+   * form never submits, so the invite was never claimed. The first real consultant ended up with a
+   * working account, the role `platform_user`, and no link to the business that invited them.
+   *
+   * `accept_consultant_invite` is idempotent and matches on the token OR the signed-in address, so
+   * calling it on arrival is safe to repeat and rescues anyone already stuck in that state. The
+   * token is passed when the URL still carries one; email alone is enough when it does not.
+   */
+  useEffect(() => {
+    if (!session) return;
+    const token = new URLSearchParams(location.search).get('token') ?? undefined;
+    void acceptInvite(token).catch(() => {
+      // Nothing to claim is the normal case for a returning consultant, and a failure here must
+      // never block a session that is otherwise fine.
+    });
+  }, [session, location.search]);
 
   if (!ready) return <Spinner label="Signing you in…" />;
 
