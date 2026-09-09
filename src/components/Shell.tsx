@@ -2,6 +2,7 @@ import type { ReactNode } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { LogOut, Briefcase } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { NotificationBell } from './NotificationBell';
 
 /** The frame every signed-in screen sits in. Intentionally thin: this app does one job. */
 export function Shell({ children, email }: { children: ReactNode; email?: string | null }) {
@@ -27,7 +28,8 @@ export function Shell({ children, email }: { children: ReactNode; email?: string
             <Link to="/clients" className="rounded-lg px-2.5 py-1.5 text-xs font-medium text-muted-foreground transition hover:text-foreground">Clients</Link>
             <Link to="/settings" className="rounded-lg px-2.5 py-1.5 text-xs font-medium text-muted-foreground transition hover:text-foreground">Settings</Link>
           </nav>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2">
+            <NotificationBell />
             {email && <span className="hidden text-xs text-muted-foreground sm:inline">{email}</span>}
             <button
               type="button"
