@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Notice } from '../components/ui';
 import { Link } from 'react-router-dom';
 import { CalendarClock, FileQuestion, MessageSquare, ShieldCheck, Inbox, Send, X, Loader2 } from 'lucide-react';
 import { myWork, postMessage, cancelDocumentRequest, type WorkItem } from '../lib/api';
@@ -90,8 +91,7 @@ export default function ThisWeek() {
   // An error with nothing loaded is the whole screen; an error after a failed action is a strip
   // above a list that still works.
   if (error && items.length === 0) {
-    return <p className="rounded-xl px-4 py-3 text-sm"
-      style={{ background: 'hsl(var(--status-danger) / 0.1)', color: 'hsl(var(--status-danger))' }}>{error}</p>;
+    return <Notice>{error}</Notice>;
   }
 
   const overdue = items.filter((i) => i.due_date && new Date(i.due_date) < new Date());
@@ -108,8 +108,7 @@ export default function ThisWeek() {
       </p>
 
       {error && items.length > 0 && (
-        <p className="mt-4 rounded-xl px-4 py-3 text-sm"
-           style={{ background: 'hsl(var(--status-danger) / 0.1)', color: 'hsl(var(--status-danger))' }}>{error}</p>
+        <Notice className="mt-4">{error}</Notice>
       )}
 
       {items.length === 0 ? (

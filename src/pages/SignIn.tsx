@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { fieldClass, Notice } from '../components/ui';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Briefcase, Loader2 } from 'lucide-react';
 import { supabase } from '../lib/supabase';
@@ -125,10 +126,7 @@ export default function SignIn() {
           </p>
         )}
         {error && (
-          <p className="mt-4 rounded-lg px-3 py-2 text-sm"
-             style={{ background: 'hsl(var(--status-danger) / 0.1)', color: 'hsl(var(--status-danger))' }}>
-            {error}
-          </p>
+          <Notice className="mt-4">{error}</Notice>
         )}
 
         <form onSubmit={submit} className="mt-5 space-y-3">
@@ -136,18 +134,18 @@ export default function SignIn() {
             <input
               type="text" value={name} onChange={(e) => setName(e.target.value)}
               placeholder="Your name" autoComplete="name"
-              className="w-full rounded-xl border border-border bg-card px-3.5 py-2.5 text-sm outline-none focus:border-[hsl(var(--jri-lavender))]"
+              className={`${fieldClass} rounded-xl px-3.5 py-2.5`}
             />
           )}
           <input
             type="email" required value={email} onChange={(e) => setEmail(e.target.value)}
             placeholder="Email address" autoComplete="email"
-            className="w-full rounded-xl border border-border bg-card px-3.5 py-2.5 text-sm outline-none focus:border-[hsl(var(--jri-lavender))]"
+            className={`${fieldClass} rounded-xl px-3.5 py-2.5`}
           />
           <input
             type="password" required value={password} onChange={(e) => setPassword(e.target.value)}
             placeholder="Password" autoComplete={mode === 'up' ? 'new-password' : 'current-password'}
-            className="w-full rounded-xl border border-border bg-card px-3.5 py-2.5 text-sm outline-none focus:border-[hsl(var(--jri-lavender))]"
+            className={`${fieldClass} rounded-xl px-3.5 py-2.5`}
           />
           <button
             type="submit" disabled={busy}

@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useState } from 'react';
+import { Notice } from '../components/ui';
 import { Link, useParams } from 'react-router-dom';
 import { ArrowLeft, FileText, Inbox } from 'lucide-react';
 import {
@@ -35,10 +36,7 @@ export default function ClientReports() {
   if (loading) return <Spinner />;
   if (error) {
     return (
-      <p className="rounded-xl px-4 py-3 text-sm"
-         style={{ background: 'hsl(var(--status-danger) / 0.1)', color: 'hsl(var(--status-danger))' }}>
-        {error}
-      </p>
+      <Notice>{error}</Notice>
     );
   }
 

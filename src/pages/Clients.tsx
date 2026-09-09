@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Badge, Notice } from '../components/ui';
 import { Link } from 'react-router-dom';
 import { Building2, ChevronRight, Inbox, Users, AlertTriangle, Clock } from 'lucide-react';
 import { myClients, myFirm, myWork, assignLinkToFirm, type Client, type MyFirm, type WorkItem } from '../lib/api';
@@ -79,10 +80,7 @@ export default function Clients() {
 
   if (error) {
     return (
-      <p className="rounded-xl px-4 py-3 text-sm"
-         style={{ background: 'hsl(var(--status-danger) / 0.1)', color: 'hsl(var(--status-danger))' }}>
-        {error}
-      </p>
+      <Notice>{error}</Notice>
     );
   }
 
@@ -137,16 +135,14 @@ export default function Clients() {
                   return (
                     <div className="mt-1.5 flex flex-wrap items-center gap-1.5 text-[11px]">
                       {st.overdue > 0 && (
-                        <span className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 font-semibold"
-                          style={{ background: 'hsl(var(--status-danger) / 0.13)', color: 'hsl(var(--status-danger))' }}>
-                          <AlertTriangle className="h-3 w-3" />{st.overdue} overdue
-                        </span>
+                        <Badge tone="danger" icon={<AlertTriangle className="h-3 w-3" />}>
+                          {st.overdue} overdue
+                        </Badge>
                       )}
                       {st.waiting > 0 && (
-                        <span className="inline-flex items-center gap-1 rounded px-1.5 py-0.5"
-                          style={{ background: 'hsl(var(--jri-amber) / 0.13)', color: 'hsl(var(--jri-amber))' }}>
-                          <Clock className="h-3 w-3" />waiting on {st.waiting}
-                        </span>
+                        <Badge tone="warn" icon={<Clock className="h-3 w-3" />}>
+                          waiting on {st.waiting}
+                        </Badge>
                       )}
                       <span className="text-muted-foreground">
                         {st.total} open · {c.report_count} report{c.report_count === 1 ? '' : 's'}

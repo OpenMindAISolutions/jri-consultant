@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Notice } from '../components/ui';
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import { ArrowLeft, Download, FileSpreadsheet, Clock } from 'lucide-react';
 import { openReport, type OpenedReport } from '../lib/api';
@@ -49,10 +50,7 @@ export default function ReportView() {
     return (
       <div>
         {back}
-        <p className="mt-4 rounded-xl px-4 py-3 text-sm"
-           style={{ background: 'hsl(var(--status-danger) / 0.1)', color: 'hsl(var(--status-danger))' }}>
-          {error}
-        </p>
+        <Notice className="mt-4">{error}</Notice>
       </div>
     );
   }
