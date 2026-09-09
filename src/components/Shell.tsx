@@ -24,7 +24,8 @@ export function Shell({ children, email }: { children: ReactNode; email?: string
             </span>
           </Link>
           <nav className="flex items-center gap-1">
-            <Link to="/" className="rounded-lg px-2.5 py-1.5 text-xs font-medium text-muted-foreground transition hover:text-foreground">This week</Link>
+            <Link to="/" className="rounded-lg px-2.5 py-1.5 text-xs font-medium text-muted-foreground transition hover:text-foreground">Dashboard</Link>
+            <Link to="/work" className="rounded-lg px-2.5 py-1.5 text-xs font-medium text-muted-foreground transition hover:text-foreground">This week</Link>
             <Link to="/clients" className="rounded-lg px-2.5 py-1.5 text-xs font-medium text-muted-foreground transition hover:text-foreground">Clients</Link>
             <Link to="/settings" className="rounded-lg px-2.5 py-1.5 text-xs font-medium text-muted-foreground transition hover:text-foreground">Settings</Link>
           </nav>

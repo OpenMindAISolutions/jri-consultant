@@ -6,6 +6,7 @@ import { acceptInvite } from './lib/api';
 import { Shell, Spinner } from './components/Shell';
 import { CommandPalette } from './components/CommandPalette';
 import SignIn from './pages/SignIn';
+import Dashboard from './pages/Dashboard';
 import ThisWeek from './pages/ThisWeek';
 import Clients from './pages/Clients';
 import ClientReports from './pages/ClientReports';
@@ -76,7 +77,10 @@ export default function App() {
           and once so the shortcut works from every route. */}
       <CommandPalette />
       <Routes>
-        <Route path="/" element={<ThisWeek />} />
+        {/* The dashboard is the front door; the full queue moved to /work. A list answers "what
+            is next" and cannot answer "am I on top of things", which is the first question. */}
+        <Route path="/" element={<Dashboard />} />
+        <Route path="/work" element={<ThisWeek />} />
         <Route path="/clients" element={<Clients />} />
         <Route path="/settings" element={<Settings />} />
         <Route path="/client/:workplaceId" element={<ClientReports />} />

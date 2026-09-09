@@ -163,19 +163,49 @@ export function Collaboration({
                   </span>
                 </button>
                 {openThread === t.id && (
-                  <div className="mt-3 space-y-2 border-t border-border pt-3">
-                    {t.messages.map((m) => (
-                      <div key={m.id} className={`rounded-lg px-3 py-2 text-xs ${m.mine ? 'ml-6' : 'mr-6'}`}
-                        style={{ background: m.mine ? 'hsl(var(--jri-lavender) / 0.10)' : 'hsl(var(--muted))' }}>
-                        <p className="text-[10px] font-semibold text-muted-foreground">
-                          {m.mine ? 'You' : m.author || 'Them'} · {whenExact(m.created_at)}
-                        </p>
-                        <p className="mt-0.5 whitespace-pre-wrap">{m.body}</p>
-                      </div>
-                    ))}
-                    <div className="flex gap-2 pt-1">
-                      <input className={input} placeholder="Reply" value={reply}
-                        onChange={(e) => setReply(e.target.value)} />
+                  <div className="mt-3 border-t border-border pt-3">
+                    {/* A conversation, not a log. Mine sit right and solid; theirs sit left and
+                        quiet, so who said what is answered by position and weight before anyone
+                        reads a label. */}
+                    <div className="space-y-2.5">
+                      {t.messages.map((m) => (
+                        <div key={m.id} className={`flex ${m.mine ? 'justify-end' : 'justify-start'}`}>
+                          <div className="max-w-[85%]">
+                            <div
+                              className={`rounded-2xl px-3 py-2 text-[13px] leading-relaxed ${
+                                m.mine ? 'rounded-br-sm text-white' : 'rounded-bl-sm text-foreground'
+                              }`}
+                              style={{
+                                background: m.mine ? 'hsl(var(--jri-lavender))' : 'hsl(var(--muted))',
+                              }}
+                            >
+                              <p className="whitespace-pre-wrap break-words">{m.body}</p>
+                            </div>
+                            <p className={`mt-1 text-[10px] text-muted-foreground ${m.mine ? 'text-right' : ''}`}>
+                              {m.mine ? 'You' : m.author || 'Them'} · {whenExact(m.created_at)}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* A textarea, not an input: an accountant's reply is a paragraph more often
+                        than it is a sentence, and a one-line box quietly discourages the longer
+                        answer that is usually the useful one. */}
+                    <div className="mt-3 flex items-end gap-2">
+                      <textarea
+                        className={`${input} min-h-[38px] resize-y`}
+                        rows={2}
+                        placeholder="Write a reply…  (⌘/Ctrl + Enter to send)"
+                        value={reply}
+                        onChange={(e) => setReply(e.target.value)}
+                        onKeyDown={(e) => {
+                          if ((e.metaKey || e.ctrlKey) && e.key === 'Enter' && reply.trim() && !busy) {
+                            e.preventDefault();
+                            void run(async () => { await postMessage(t.id, reply.trim()); setReply(''); });
+                          }
+                        }}
+                      />
                       <button type="button" disabled={busy || !reply.trim()} className={primary}
                         style={{ background: 'hsl(var(--jri-lavender))' }}
                         onClick={() => void run(async () => { await postMessage(t.id, reply.trim()); setReply(''); })}>
