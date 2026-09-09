@@ -1,0 +1,39 @@
+# Netlify configuration for the consultant app.
+#
+# WHY THE REDIRECT IS THE IMPORTANT LINE. This is a single-page app: React Router owns every path
+# after the first, and the server only ever has one file to serve. Without the catch-all, Netlify
+# looks for a literal file at the requested path — so `/` worked and
+# `/invite?token=…` returned Netlify's own 404, which is exactly how the first real invitation
+# failed. Deep routes are not an edge case here; the INVITE LINK IS THE FRONT DOOR, and it is
+# always a deep route.
+#
+# status = 200 (a rewrite) and not 301/302 (a redirect): the browser must keep the original URL,
+# because the token lives in its query string and the app reads it on mount. A redirect would send
+# the visitor to `/` and drop the token, which fails in a much more confusing way than a 404.
+
+[build]
+  command = "npm run build"
+  publish = "dist"
+
+# Every path that is not a real file becomes the app.
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+[[headers]]
+  for = "/*"
+  [headers.values]
+    # This app renders a business's financial reports. Refuse to be framed, so a hostile page
+    # cannot overlay it and harvest what an accountant is looking at.
+    X-Frame-Options = "DENY"
+    X-Content-Type-Options = "nosniff"
+    # An invite token lives in the query string. Sending a full URL as a referrer to third parties
+    # would leak it into their logs; origin-only never does.
+    Referrer-Policy = "strict-origin-when-cross-origin"
+
+# Vite fingerprints these filenames, so a long cache is safe and a stale bundle impossible.
+[[headers]]
+  for = "/assets/*"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
