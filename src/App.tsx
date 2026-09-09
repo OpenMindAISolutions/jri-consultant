@@ -3,6 +3,7 @@ import { Navigate, Route, Routes, useLocation } from 'react-router-dom';
 import type { Session } from '@supabase/supabase-js';
 import { supabase } from './lib/supabase';
 import { Shell, Spinner } from './components/Shell';
+import { CommandPalette } from './components/CommandPalette';
 import SignIn from './pages/SignIn';
 import ThisWeek from './pages/ThisWeek';
 import Clients from './pages/Clients';
@@ -48,6 +49,9 @@ export default function App() {
 
   return (
     <Shell email={session.user.email}>
+      {/* Mounted inside the authenticated shell so it can never appear on the sign-in screen,
+          and once so the shortcut works from every route. */}
+      <CommandPalette />
       <Routes>
         <Route path="/" element={<ThisWeek />} />
         <Route path="/clients" element={<Clients />} />

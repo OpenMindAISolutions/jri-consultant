@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { Building2, ChevronRight, Inbox, Users } from 'lucide-react';
-import { myClients, myFirm, assignLinkToFirm, type Client, type MyFirm } from '../lib/api';
+import { Building2, ChevronRight, Inbox, Users, AlertTriangle, Clock } from 'lucide-react';
+import { myClients, myFirm, myWork, assignLinkToFirm, type Client, type MyFirm, type WorkItem } from '../lib/api';
 import { Empty, Spinner } from '../components/Shell';
 
 /**
@@ -18,6 +18,14 @@ export default function Clients() {
   const [firm, setFirm] = useState<MyFirm | null>(null);
   const [firmLinks, setFirmLinks] = useState<Set<string>>(new Set());
   const [saving, setSaving] = useState<string | null>(null);
+  /**
+   * What each client currently needs, not just what they are called.
+   *
+   * A book of names answers nothing — the question a consultant opens this screen with is "who is
+   * costing me sleep". `myWork` already returns every open item with its workplace, so one extra
+   * call turns the grid from a directory into a triage list.
+   */
+  const [work, setWork] = useState<WorkItem[]>([]);
 
   useEffect(() => {
     myClients()
@@ -25,6 +33,7 @@ export default function Clients() {
       .catch((e) => setError(e instanceof Error ? e.message : 'Could not load your clients.'))
       .finally(() => setLoading(false));
     // A firm is optional — a solo consultant simply never sees the control below.
+    void myWork().then((w) => setWork(w ?? [])).catch(() => { /* the list still works without it */ });
     void myFirm()
       .then((f) => { if (f) { setFirm(f); setFirmLinks(new Set(f.firm_link_ids ?? [])); } })
       .catch(() => { /* no firm; the sharing control stays hidden */ });
@@ -37,6 +46,17 @@ export default function Clients() {
    * so a firm owner could add colleagues and then never give them anything to work on — the firm
    * feature broke at its last step.
    */
+  const stateFor = (workplaceId: string) => {
+    const mine = work.filter((w) => w.workplace_id === workplaceId);
+    const now = Date.now();
+    const overdue = mine.filter((w) => w.due_date && new Date(w.due_date).getTime() < now).length;
+    const waiting = mine.filter((w) => w.kind === 'document_request').length;
+    const soonest = mine
+      .filter((w) => w.due_date)
+      .sort((a, b) => new Date(a.due_date!).getTime() - new Date(b.due_date!).getTime())[0];
+    return { total: mine.length, overdue, waiting, soonest };
+  };
+
   const toggleFirm = async (linkId: string) => {
     if (!firm) return;
     const isShared = firmLinks.has(linkId);
@@ -104,11 +124,36 @@ export default function Clients() {
                 <p className="mt-2 truncate text-xs text-muted-foreground">
                   {[c.entity_type, c.gstin].filter(Boolean).join(' · ') || 'No entity details shared'}
                 </p>
-                <p className="mt-1 text-xs text-muted-foreground">
-                  {c.report_count === 0
-                    ? 'No reports shared yet'
-                    : `${c.report_count} report${c.report_count === 1 ? '' : 's'} shared`}
-                </p>
+                {(() => {
+                  const st = stateFor(c.workplace_id);
+                  if (st.total === 0) {
+                    return (
+                      <p className="mt-1 text-xs text-muted-foreground">
+                        Nothing needs you ·{' '}
+                        {c.report_count === 0 ? 'no reports shared' : `${c.report_count} report${c.report_count === 1 ? '' : 's'}`}
+                      </p>
+                    );
+                  }
+                  return (
+                    <div className="mt-1.5 flex flex-wrap items-center gap-1.5 text-[11px]">
+                      {st.overdue > 0 && (
+                        <span className="inline-flex items-center gap-1 rounded px-1.5 py-0.5 font-semibold"
+                          style={{ background: 'hsl(var(--status-danger) / 0.13)', color: 'hsl(var(--status-danger))' }}>
+                          <AlertTriangle className="h-3 w-3" />{st.overdue} overdue
+                        </span>
+                      )}
+                      {st.waiting > 0 && (
+                        <span className="inline-flex items-center gap-1 rounded px-1.5 py-0.5"
+                          style={{ background: 'hsl(var(--jri-amber) / 0.13)', color: 'hsl(var(--jri-amber))' }}>
+                          <Clock className="h-3 w-3" />waiting on {st.waiting}
+                        </span>
+                      )}
+                      <span className="text-muted-foreground">
+                        {st.total} open · {c.report_count} report{c.report_count === 1 ? '' : 's'}
+                      </span>
+                    </div>
+                  );
+                })()}
               </div>
               <ChevronRight className="mt-1 h-4 w-4 shrink-0 text-muted-foreground transition group-hover:translate-x-0.5" />
             </Link>
