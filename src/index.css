@@ -3,6 +3,15 @@
 @tailwind utilities;
 
 /**
+ * The brand serif. Used for the wordmark and for display moments — a landing headline, a hero — and
+ * deliberately nowhere else: a serif that appears in body copy stops being a signal.
+ *
+ * Loaded in index.html alongside Inter. The fallback chain matters because Cormorant is fetched
+ * over the network and a wordmark that reflows on load is the first thing a visitor notices.
+ */
+.font-brand { font-family: 'Cormorant Garamond', Georgia, 'Times New Roman', serif; }
+
+/**
  * Tokens copied deliberately from the JRI user app (src/index.css), so the two products look like
  * one company. This is the ONE place the separate-repo decision costs us: these values now live in
  * two files and can drift. If the brand changes, change it here too.

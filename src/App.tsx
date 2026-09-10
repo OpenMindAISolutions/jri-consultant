@@ -6,6 +6,8 @@ import { acceptInvite } from './lib/api';
 import { Shell, Spinner } from './components/Shell';
 import { CommandPalette } from './components/CommandPalette';
 import SignIn from './pages/SignIn';
+import Landing from './pages/Landing';
+import Join from './pages/Join';
 import Dashboard from './pages/Dashboard';
 import ThisWeek from './pages/ThisWeek';
 import Clients from './pages/Clients';
@@ -67,8 +69,19 @@ export default function App() {
     // invitation lands on "create your account" rather than a login form with no explanation.
     return (
       <Routes>
-        <Route path="/invite" element={<SignIn />} />
+        {/* The front door for anyone who has not been here. One page, and the only marketing
+            surface this application has. */}
+        <Route path="/" element={<Landing />} />
+
+        {/* `/invite` is the emailed link and now has a page of its own rather than a login form
+            with a toggle: an accountant clicking a link from a client needs to be told what they
+            are signing in to, or the page is indistinguishable from a phishing attempt. */}
+        <Route path="/invite" element={<Join />} />
+        <Route path="/join" element={<Join />} />
         <Route path="/signin" element={<SignIn />} />
+
+        {/* A deep link while signed out goes to sign-in, NOT to the landing page: that person has
+            been here before and knows what this is — they just need their session back. */}
         <Route path="*" element={<Navigate to={`/signin${location.search}`} replace />} />
       </Routes>
     );

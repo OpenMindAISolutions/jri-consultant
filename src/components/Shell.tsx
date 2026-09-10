@@ -1,9 +1,10 @@
 import type { ReactNode } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
-  LayoutDashboard, CalendarClock, Users, Settings as SettingsIcon, LogOut, Briefcase,
+  LayoutDashboard, CalendarClock, Users, Settings as SettingsIcon, LogOut,
   Building2, BarChart3,
 } from 'lucide-react';
+import { BrandMark } from './BrandMark';
 
 /**
  * One source for both navigations, so the top bar and the phone bar can never disagree.
@@ -35,18 +36,10 @@ export function Shell({ children, email }: { children: ReactNode; email?: string
     <div className="flex min-h-full flex-col">
       <header className="sticky top-0 z-10 border-b border-border bg-card/85 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between gap-2 px-4 py-3 sm:gap-4 sm:px-5">
-          <Link to="/" className="flex items-center gap-2.5">
-            <span
-              className="flex h-8 w-8 items-center justify-center rounded-xl"
-              style={{ background: 'hsl(var(--jri-lavender) / 0.14)', color: 'hsl(var(--jri-lavender))' }}
-            >
-              <Briefcase className="h-4 w-4" />
-            </span>
-            <span className="leading-tight">
-              <span className="block text-sm font-semibold">JRI.AI</span>
-              <span className="type-eyebrow hidden text-muted-foreground sm:block">for consultants</span>
-            </span>
-          </Link>
+          {/* The lotus, not a stand-in icon. This header was drawing a briefcase in a lavender
+              tile while the actual brand mark sat unused — see components/BrandMark.tsx. */}
+          <BrandMark size="sm" className="sm:hidden" />
+          <BrandMark size="sm" subtitle="for consultants" className="hidden sm:flex" />
           <nav className="hidden items-center gap-1 md:flex">
             {NAV.map((n) => (
               <Link key={n.to} to={n.to}
