@@ -67,11 +67,18 @@ export function PageTitle({
 
 // ── Controls ────────────────────────────────────────────────────────────────
 
-type Tone = 'primary' | 'secondary' | 'ghost' | 'danger';
+/**
+ * `ok` is the confirming action — "record this filing", "mark it done". It earns a place in the
+ * vocabulary because without it the one green button in the app was hand-rolled with its own
+ * padding, which is exactly how two button shapes start.
+ */
+type Tone = 'primary' | 'secondary' | 'ghost' | 'danger' | 'ok' | 'accent';
 
 const TONE_BG: Record<Exclude<Tone, 'secondary' | 'ghost'>, string> = {
   primary: 'hsl(var(--jri-lavender))',
   danger: 'hsl(var(--status-danger))',
+  ok: 'hsl(var(--status-ok))',
+  accent: 'hsl(var(--jri-cyan))',
 };
 
 export function Button({
@@ -84,7 +91,7 @@ export function Button({
     `inline-flex items-center justify-center gap-1.5 rounded-lg font-semibold transition ` +
     `disabled:cursor-not-allowed disabled:opacity-50 ${pad} ${className}`;
 
-  if (tone === 'primary' || tone === 'danger') {
+  if (tone === 'primary' || tone === 'danger' || tone === 'ok' || tone === 'accent') {
     return (
       <button {...rest} disabled={rest.disabled || busy}
         className={`${base} text-white hover:opacity-90`}

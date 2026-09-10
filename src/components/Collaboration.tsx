@@ -5,6 +5,7 @@ import {
   type ClientActivity,
 } from '../lib/api';
 import { when, whenExact } from '../lib/format';
+import { Button, Notice, fieldClass } from './ui';
 
 /**
  * The three things a consultant does between reports: chase a document, ask a question, and record
@@ -49,8 +50,9 @@ export function Collaboration({
     { id: 'filings', label: 'Filed', icon: ShieldCheck, count: activity.filings.length },
   ];
 
-  const input = 'w-full rounded-lg border border-border bg-background px-3 py-2 text-sm outline-none focus:border-[hsl(var(--jri-lavender))]';
-  const primary = 'inline-flex items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold text-white transition hover:opacity-90 disabled:opacity-50';
+  // No local `input`/`primary` constants: this component used to declare its own, which is how a
+  // product ends up with two button paddings and two focus rings. fieldClass and Button are the
+  // single vocabulary — see components/ui.tsx.
 
   return (
     <div className="rounded-2xl border border-border bg-card">
@@ -68,10 +70,7 @@ export function Collaboration({
         ))}
       </div>
 
-      {error && (
-        <p className="mx-3 mt-3 rounded-lg px-3 py-2 text-xs"
-           style={{ background: 'hsl(var(--status-danger) / 0.1)', color: 'hsl(var(--status-danger))' }}>{error}</p>
-      )}
+      {error && <Notice className="mx-3 mt-3">{error}</Notice>}
 
       <div className="p-3.5">
         {tab === 'requests' && (
@@ -79,20 +78,19 @@ export function Collaboration({
             <div className="rounded-xl border border-border p-3">
               <p className="text-xs font-semibold">Ask for a document</p>
               <div className="mt-2 space-y-2">
-                <input className={input} placeholder="What do you need? e.g. April bank statement"
+                <input className={fieldClass} placeholder="What do you need? e.g. April bank statement"
                   value={reqTitle} onChange={(e) => setReqTitle(e.target.value)} />
-                <input className={input} placeholder="Any detail (optional)"
+                <input className={fieldClass} placeholder="Any detail (optional)"
                   value={reqNote} onChange={(e) => setReqNote(e.target.value)} />
                 <div className="flex gap-2">
-                  <input className={input} type="date" value={reqDue} onChange={(e) => setReqDue(e.target.value)} />
-                  <button type="button" disabled={busy || !reqTitle.trim()} className={primary}
-                    style={{ background: 'hsl(var(--jri-lavender))' }}
+                  <input className={fieldClass} type="date" value={reqDue} onChange={(e) => setReqDue(e.target.value)} />
+                  <Button tone="primary" busy={busy} disabled={!reqTitle.trim()}
                     onClick={() => void run(async () => {
                       await requestDocument(activity.link_id, reqTitle.trim(), reqNote.trim() || null, reqDue || null);
                       setReqTitle(''); setReqNote(''); setReqDue('');
                     })}>
                     <Plus className="h-3.5 w-3.5" /> Ask
-                  </button>
+                  </Button>
                 </div>
               </div>
             </div>
@@ -132,17 +130,16 @@ export function Collaboration({
             <div className="rounded-xl border border-border p-3">
               <p className="text-xs font-semibold">Start a conversation</p>
               <div className="mt-2 space-y-2">
-                <input className={input} placeholder="Subject" value={subject} onChange={(e) => setSubject(e.target.value)} />
-                <textarea className={input} rows={2} placeholder="Your question"
+                <input className={fieldClass} placeholder="Subject" value={subject} onChange={(e) => setSubject(e.target.value)} />
+                <textarea className={fieldClass} rows={2} placeholder="Your question"
                   value={body} onChange={(e) => setBody(e.target.value)} />
-                <button type="button" disabled={busy || !subject.trim() || !body.trim()} className={primary}
-                  style={{ background: 'hsl(var(--jri-lavender))' }}
+                <Button tone="primary" busy={busy} disabled={!subject.trim() || !body.trim()}
                   onClick={() => void run(async () => {
                     await startThread(activity.link_id, subject.trim(), body.trim());
                     setSubject(''); setBody('');
                   })}>
                   <Send className="h-3.5 w-3.5" /> Send
-                </button>
+                </Button>
               </div>
             </div>
 
@@ -194,7 +191,7 @@ export function Collaboration({
                         answer that is usually the useful one. */}
                     <div className="mt-3 flex items-end gap-2">
                       <textarea
-                        className={`${input} min-h-[38px] resize-y`}
+                        className={`${fieldClass} min-h-[38px] resize-y`}
                         rows={2}
                         placeholder="Write a reply…  (⌘/Ctrl + Enter to send)"
                         value={reply}
@@ -206,11 +203,10 @@ export function Collaboration({
                           }
                         }}
                       />
-                      <button type="button" disabled={busy || !reply.trim()} className={primary}
-                        style={{ background: 'hsl(var(--jri-lavender))' }}
+                      <Button tone="primary" busy={busy} disabled={!reply.trim()}
                         onClick={() => void run(async () => { await postMessage(t.id, reply.trim()); setReply(''); })}>
                         <Send className="h-3.5 w-3.5" />
-                      </button>
+                      </Button>
                     </div>
                   </div>
                 )}
@@ -227,22 +223,21 @@ export function Collaboration({
                 The client sees this, so they know it is done and what the acknowledgement was.
               </p>
               <div className="mt-2 space-y-2">
-                <input className={input} placeholder="What was filed? e.g. GSTR-3B"
+                <input className={fieldClass} placeholder="What was filed? e.g. GSTR-3B"
                   value={filTitle} onChange={(e) => setFilTitle(e.target.value)} />
                 <div className="flex gap-2">
-                  <input className={input} placeholder="Period e.g. Aug 2026"
+                  <input className={fieldClass} placeholder="Period e.g. Aug 2026"
                     value={filPeriod} onChange={(e) => setFilPeriod(e.target.value)} />
-                  <input className={input} placeholder="Acknowledgement no."
+                  <input className={fieldClass} placeholder="Acknowledgement no."
                     value={filAck} onChange={(e) => setFilAck(e.target.value)} />
                 </div>
-                <button type="button" disabled={busy || !filTitle.trim()} className={primary}
-                  style={{ background: 'hsl(var(--status-ok))' }}
+                <Button tone="ok" busy={busy} disabled={!filTitle.trim()}
                   onClick={() => void run(async () => {
                     await recordFiling(activity.link_id, filTitle.trim(), filPeriod.trim() || null, filAck.trim() || null, null);
                     setFilTitle(''); setFilPeriod(''); setFilAck('');
                   })}>
                   <ShieldCheck className="h-3.5 w-3.5" /> Record
-                </button>
+                </Button>
               </div>
             </div>
 

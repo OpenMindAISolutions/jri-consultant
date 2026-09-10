@@ -31,8 +31,10 @@ const PURPOSES = [
   { id: 'custom', label: 'Something else' },
 ];
 
+// `input` stays as a local alias only because it reads better at 40 call sites; it IS fieldClass.
+// The former local `btn` constant is gone — Button is the vocabulary, and a second button shape
+// declared in one file is how a product ends up looking like two products.
 const input = fieldClass;
-const btn = 'inline-flex items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold text-white transition hover:opacity-90 disabled:opacity-50';
 
 export default function Settings() {
   const [wa, setWa] = useState<WhatsAppOverview | null>(null);
@@ -98,14 +100,11 @@ export default function Settings() {
       )}
 
       {/* ── Firm ── */}
-      <section className="rounded-2xl border border-border bg-card p-5">
-        <h2 className="flex items-center gap-2 text-sm font-semibold">
-          <Building2 className="h-4 w-4" /> Your firm
-        </h2>
-        <p className="mt-1 text-xs text-muted-foreground">
-          A firm lets colleagues work your clients without sharing your login — so who did what stays
-          on the record. Solo? You can skip this entirely.
-        </p>
+      <Section
+        title="Your firm"
+        icon={<Building2 className="h-4 w-4" />}
+        subtitle="A firm lets colleagues work your clients without sharing your login — so who did what stays on the record. Solo? You can skip this entirely."
+      >
         {firmId ? (
           <p className="mt-3 text-sm">
             <span className="font-medium">{firmLabel ?? 'Your firm'}</span>
@@ -115,22 +114,20 @@ export default function Settings() {
           <div className="mt-3 flex flex-wrap gap-2">
             <input className={`${input} max-w-xs`} placeholder="Firm name"
               value={firmName} onChange={(e) => setFirmName(e.target.value)} />
-            <button type="button" disabled={busy || !firmName.trim()} className={btn}
-              style={{ background: 'hsl(var(--jri-lavender))' }}
+            <Button tone="primary" busy={busy} disabled={!firmName.trim()}
               onClick={() => void run(async () => {
                 const id = await createFirm(firmName.trim());
                 setFirmId(id); setFirmLabel(firmName.trim()); setFirmName('');
               })}>
               <Plus className="h-3.5 w-3.5" /> Create firm
-            </button>
+            </Button>
           </div>
         )}
         {firmId && (
           <div className="mt-3 flex flex-wrap gap-2 border-t border-border pt-3">
             <input className={`${input} max-w-xs`} placeholder="Colleague's email"
               value={memberEmail} onChange={(e) => setMemberEmail(e.target.value)} />
-            <button type="button" disabled={busy || !memberEmail.trim()} className={btn}
-              style={{ background: 'hsl(var(--jri-cyan))' }}
+            <Button tone="accent" busy={busy} disabled={!memberEmail.trim()}
               onClick={() => void run(async () => {
                 const r = await addFirmMember(firmId, memberEmail.trim());
                 if (r.status === 'no_account') {
@@ -140,16 +137,13 @@ export default function Settings() {
                 setMemberEmail('');
               })}>
               <Plus className="h-3.5 w-3.5" /> Add colleague
-            </button>
+            </Button>
           </div>
         )}
-      </section>
+      </Section>
 
       {/* ── WhatsApp ── */}
-      <section className="rounded-2xl border border-border bg-card p-5">
-        <h2 className="flex items-center gap-2 text-sm font-semibold">
-          <MessageCircle className="h-4 w-4" /> WhatsApp
-        </h2>
+      <Section title="WhatsApp" icon={<MessageCircle className="h-4 w-4" />}>
 
         {!connected ? (
           <>
@@ -200,15 +194,14 @@ export default function Settings() {
               even to you. If you lose it, disconnect and reconnect with a new one.
             </p>
 
-            <button type="button" disabled={busy} className={`${btn} mt-3`}
-              style={{ background: 'hsl(var(--jri-lavender))' }}
+            <Button tone="primary" busy={busy} className="mt-3"
               onClick={() => void run(async () => {
                 await connectWhatsApp({ provider: route, ...form });
                 setForm({ displayName: '', phoneE164: '', phoneNumberId: '', businessAccountId: '', accessToken: '', bspName: '', bspReference: '' });
               })}>
               {busy ? <Loader2 className="h-3.5 w-3.5 animate-spin" /> : <MessageCircle className="h-3.5 w-3.5" />}
               Connect
-            </button>
+            </Button>
           </>
         ) : (
           <>
@@ -250,14 +243,13 @@ export default function Settings() {
                   onChange={(e) => setTpl({ ...tpl, purpose: e.target.value })}>
                   {PURPOSES.map((p) => <option key={p.id} value={p.id}>{p.label}</option>)}
                 </select>
-                <button type="button" disabled={busy || !tpl.name.trim()} className={btn}
-                  style={{ background: 'hsl(var(--status-ok))' }}
+                <Button tone="ok" busy={busy} disabled={!tpl.name.trim()}
                   onClick={() => void run(async () => {
                     await saveWhatsAppTemplate(connected.connection.id, tpl.name.trim(), tpl.purpose, 'en', tpl.preview || null, true);
                     setTpl({ name: '', purpose: 'document_request', preview: '' });
                   })}>
                   <Plus className="h-3.5 w-3.5" /> Add
-                </button>
+                </Button>
               </div>
               {connected.templates.length === 0 ? (
                 <p className="mt-2 text-[11px] text-muted-foreground">
@@ -289,14 +281,13 @@ export default function Settings() {
                   value={optin.phone} onChange={(e) => setOptin({ ...optin, phone: e.target.value })} />
                 <input className={`${input} max-w-[13rem]`} placeholder="Their name"
                   value={optin.name} onChange={(e) => setOptin({ ...optin, name: e.target.value })} />
-                <button type="button" disabled={busy || !optin.phone.trim()} className={btn}
-                  style={{ background: 'hsl(var(--jri-cyan))' }}
+                <Button tone="accent" busy={busy} disabled={!optin.phone.trim()}
                   onClick={() => void run(async () => {
                     await recordOptin(connected.connection.id, optin.phone.trim(), optin.name.trim() || null);
                     setOptin({ phone: '', name: '' });
                   })}>
                   <Plus className="h-3.5 w-3.5" /> Record consent
-                </button>
+                </Button>
               </div>
               {connected.optins.length > 0 && (
                 <div className="mt-2 space-y-1">
@@ -328,7 +319,7 @@ export default function Settings() {
             )}
           </>
         )}
-      </section>
+      </Section>
 
       <PaymentPanel firmId={firmId} firmLabel={firmLabel} />
 

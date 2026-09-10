@@ -8,8 +8,23 @@
  */
 import { supabase } from './supabase';
 
-async function call<T>(fn: string, args?: Record<string, unknown>): Promise<T> {
-  const { data, error } = await supabase.rpc(fn, args);
+import type { Database } from './database.types';
+
+/** Every function the database actually exposes. A typo in a name is now a build error. */
+type RpcName = keyof Database['public']['Functions'];
+
+/**
+ * One call, one place to decide what a failure means.
+ *
+ * THE NAME IS CHECKED, THE ARGUMENTS ARE CAST, AND THAT IS A DELIBERATE SPLIT. A mistyped function
+ * name is the failure worth catching at build time — it is invisible until a consultant clicks the
+ * thing and gets "function does not exist". Argument shapes are cast because the generated types
+ * describe a jsonb return as `Json`, while the interfaces below say what the JSON actually contains;
+ * accepting the generated shape would mean throwing away the more precise type in exchange for a
+ * weaker one. The generated names give the safety; the hand-written interfaces give the meaning.
+ */
+async function call<T>(fn: RpcName, args?: Record<string, unknown>): Promise<T> {
+  const { data, error } = await supabase.rpc(fn, args as never);
   if (error) throw new Error(error.message);
   return data as T;
 }

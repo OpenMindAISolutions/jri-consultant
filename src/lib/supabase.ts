@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import type { Database } from './database.types';
 
 const url = import.meta.env.VITE_SUPABASE_URL;
 const anonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
@@ -17,6 +18,6 @@ if (!url || !anonKey) {
  * store — it is which rows the caller is allowed to see, and that is enforced by
  * `consultant_can_read_report()` server-side, not by this app being a different bundle.
  */
-export const supabase = createClient(url.replace(/\/$/, ''), anonKey, {
+export const supabase = createClient<Database>(url.replace(/\/$/, ''), anonKey, {
   auth: { autoRefreshToken: true, persistSession: true, detectSessionInUrl: true },
 });
