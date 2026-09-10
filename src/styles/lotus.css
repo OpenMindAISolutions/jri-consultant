@@ -1,53 +1,78 @@
 /* ==========================================================================
-   Lotus — the landing-route design layer, ported from the jri.ai marketing
-   site (JRI-LAnding-page/src/styles/lotus.css and BRAND.md).
+   The practice surface — a SIBLING of the jri.ai lotus system, not a copy of it.
 
-   THIS IS A PORT, NOT AN INTERPRETATION. The values are the measured ones from
-   the brand book: every ink/field pair clears 4.5:1, every gold/field pair
-   clears 3:1, and the field colours are sampled from the hero artwork rather
-   than picked. Changing a hex here without redoing that arithmetic breaks a
-   guarantee somebody made deliberately.
+   WHY IT DIVERGES, AND ON WHICH AXIS. The marketing site and this one were
+   running the same field, the same clouds and the same wordmark, so they read as
+   one page in two sets of words. The brand book itself says where the room is:
+   across the four dayparts "layout, type and components are IDENTICAL — only the
+   sky and its ink change". Colour and texture are the system's declared
+   variable; structure is its invariant. So the differentiation goes there, and
+   nowhere else.
 
-   THE FOUR RULES OF THE PIXEL LANGUAGE, which the rest of this app does NOT
-   follow and which this file exists to enforce on one route:
+     jri.ai            SKY.    Clouds, weather, four dayparts on the visitor's
+                               clock. A founder looking up and out. Growth.
+
+     consultant.jri.ai INK.    A ruled ledger. Dense, fixed, quiet. Somebody
+                               looking DOWN at paper. Precision, not weather.
+
+   A consultant does not look at the sky. That is the whole idea, and it is why
+   the clouds are gone and why THERE ARE NO DAYPARTS HERE: a ledger has no
+   weather. The field is one authoritative ink, always. (Restoring dayparts is a
+   ten-line change if that judgement is ever overruled.)
+
+   WHAT IS DELIBERATELY UNCHANGED, because this must still be the same company:
+   the lotus mark, Cormorant for display, Inter for body, Silkscreen for
+   micro-labels, the pills, the hairlines, and the four absolute rules —
      1. No gradients. Anywhere.
      2. No blur, no shadows.
      3. No rounded containers, no cards — separation is hairlines and whitespace.
      4. Motion is stepped or linear, never eased-smooth decoration.
 
-   SCOPED UNDER .lotus-root ON PURPOSE. The marketing site scopes it to its home
-   route so it cannot leak into sixty other pages; the same reasoning applies
-   here. The landing page is lotus; the signed-in application and the auth pages
-   stay on the warm-paper surface, because that is where somebody works rather
-   than where they are being persuaded.
+   THE FIELD, measured rather than picked. #08323e sits at H~197, inside the
+   brand's own hue range (the book places its palette between --jri-cyan at 187
+   and --jri-lavender at 259) and adjacent to the cyan. It is far DARKER than the
+   sky it replaces — L~0.30 against the sky's 0.52 — and that density difference
+   is doing as much differentiating work as the hue is: open daylight versus
+   ink on a desk. Cream on it measures 11.4:1, so every soft tone below has room
+   the sky field never had.
+
+   Scoped under .lotus-root: the landing route only. The signed-in application
+   stays on warm paper, because that is where somebody works rather than where
+   they are being persuaded.
    ========================================================================== */
 
 .lotus-root {
-  --lotus-field: #0866c9;
+  --lotus-field: #08323e;
   --lotus-ink: #fffef7;
-  /* 0.86, NOT the source system's 0.76 — measured, not adjusted by eye.
-     --lotus-ink-soft carries the eyebrows and all body copy on this page. On the
-     DAY field (#0866c9) cream at 0.76 composites to 3.87:1, which is under the
-     brand book's own stated floor of 4.5:1 for body text. 0.86 is the lowest
-     alpha that clears it (5.53:1 is full ink). The other three dayparts already
-     pass at their documented alphas — dusk 0.78 -> 4.5, dawn 0.70 -> 4.73,
-     night 0.74 -> 8.71 — so this is the only value that moved.
-     Day is the binding case because it is the lightest dark field. */
-  --lotus-ink-soft: rgba(255, 254, 247, 0.86);
-  --lotus-ink-faint: rgba(255, 254, 247, 0.34);
-  --lotus-hairline: rgba(255, 254, 247, 0.28);
+  /* Cream on this field is 11.4:1 at full strength, so the soft tone can sit at
+     0.72 and still clear the 4.5:1 body floor with room to spare — the sky field
+     needed 0.86 to manage the same thing. A darker ground buys legibility. */
+  --lotus-ink-soft: rgba(255, 254, 247, 0.72);
+  /* 0.55, not the sky system's 0.34. --lotus-ink-faint carries the quietest
+     LABELS on this page — month headers, sub-captions — and a label is text. At
+     0.42 it measured 3.62:1 here, under the 4.5:1 floor; 0.50 is the minimum
+     that clears it and 0.55 gives 5.14:1, enough margin that the next label
+     someone adds is safe without re-measuring. The hierarchy still reads:
+     13.52 : 7.71 : 5.14 for ink, soft and faint. */
+  --lotus-ink-faint: rgba(255, 254, 247, 0.55);
+  --lotus-hairline: rgba(255, 254, 247, 0.22);
   --lotus-amber: #ffb43c;
   --lotus-amber-soft: #ffd08a;
   --lotus-periwinkle: #c1c5ff;
   --lotus-cream: #fffef7;
   --lotus-deep: #7fb3ff;
   --lotus-on-accent: #331a00;
-  --lotus-cloud: #ffffff;
-  --lotus-cloud-alpha: 0.82;
+
+  /* The ruled paper. One line every 26px, a column rule every 132px, both at an
+     alpha that reads as texture and never as a table. */
+  --ledger-rule: rgba(255, 254, 247, 0.09);
+  --ledger-column: rgba(255, 254, 247, 0.055);
 
   --lotus-gutter: clamp(1.25rem, 5vw, 5.5rem);
   --lotus-section: clamp(3rem, 5.5vw, 4.5rem);
 
+  /* The ledger is absolutely positioned against this. */
+  position: relative;
   background-color: var(--lotus-field);
   color: var(--lotus-ink);
   font-family: "Inter", ui-sans-serif, system-ui, sans-serif;
@@ -57,8 +82,15 @@
 
 /* The field has to reach the browser chrome (overscroll gutters), not just the
    app root — otherwise a rubber-band scroll on a phone shows warm paper behind
-   a blue page. */
-body:has(.lotus-root) { background-color: var(--lotus-field, #0866c9); }
+   an ink page.
+
+   THE HEX IS REPEATED HERE ON PURPOSE, and it must stay in step with
+   --lotus-field above. `body` is a PARENT of .lotus-root, so it cannot read a
+   custom property scoped to it: `var(--lotus-field, …)` resolves to the fallback
+   every single time. Carrying the sky's #0866c9 through from the ported file
+   meant the overscroll gutter flashed the BUSINESS app's blue around an ink
+   page — visible the moment anything rubber-banded. */
+body:has(.lotus-root) { background-color: #08323e; }
 
 /* ---- Type ---------------------------------------------------------------- */
 
@@ -140,41 +172,40 @@ body:has(.lotus-root) { background-color: var(--lotus-field, #0866c9); }
 }
 .lotus-link:hover { background-size: 100% 1.5px; }
 
-/* ---- The sky -------------------------------------------------------------- */
-/* ABSOLUTE AND PER-SECTION, never full-page. White cloud under cream body text
-   measures 1.29:1, and the alpha that would keep body copy at AA (0.10) makes
-   the clouds invisible. So the sky lives only where the type is display-sized
-   (hero and closing), which needs 3:1; body sections sit on the flat field at
-   a clean 5.53:1. This is a structural rule, not a tuning preference. */
-.lotus-sky {
+/* ---- The ledger ----------------------------------------------------------- */
+/* Replaces the sky. Ruled lines drift UPWARD, slowly, the way paper moves when
+   somebody scrolls a page of accounts — where clouds drift sideways, which is
+   what weather does. Same technique (a 200% track on a linear loop), opposite
+   axis, and that is the point: the motion itself says which product you are on.
+
+   Unlike the clouds this CAN sit behind body copy: the rules are 0.09 alpha
+   hairlines, not white shapes, so text over them measures the same as text on
+   the flat field. That is why the ledger runs the full page and the sky could
+   only run the hero. */
+.lotus-ledger {
   position: absolute;
   inset: 0;
   z-index: 0;
   overflow: hidden;
   pointer-events: none;
-  color: var(--lotus-cloud, var(--lotus-cream));
-  --lotus-cloud-scale: 1;
-}
-@media (max-width: 640px) {
-  /* A 300px cloud on a 375px viewport is a wall, not weather. */
-  .lotus-sky { --lotus-cloud-scale: 0.5; }
 }
 
-.lotus-sky-track {
+.lotus-ledger-track {
   position: absolute;
   inset: 0;
-  width: 200%;
-  animation-name: lotus-sky-drift;
+  height: 200%;
+  animation-name: lotus-ledger-drift;
   animation-timing-function: linear;
   animation-iteration-count: infinite;
   will-change: transform;
 }
-@keyframes lotus-sky-drift {
+
+@keyframes lotus-ledger-drift {
   from { transform: translate3d(0, 0, 0); }
-  to   { transform: translate3d(-50%, 0, 0); }
+  to   { transform: translate3d(0, -50%, 0); }
 }
 
-/* Anything real has to clear the cloud layer at z-index 0. */
+/* Anything real has to clear the ledger layer at z-index 0. */
 .lotus-above { position: relative; z-index: 1; }
 
 /* ---- Drifting sprites ----------------------------------------------------- */
@@ -216,67 +247,14 @@ body:has(.lotus-root) { background-color: var(--lotus-field, #0866c9); }
 }
 
 /* ==========================================================================
-   The four dayparts — switched on the visitor's local clock.
+   NO DAYPARTS.
 
-   Layout, type and components are IDENTICAL across all four; only the sky and
-   its ink change, so the page never reorganises itself under a returning
-   visitor. There is deliberately NO transition on the field: a transition on
-   background-color stops the value ever landing on the new daypart, and the
-   instant switch is also less distracting than morphing a page of colour.
+   The marketing site repaints its sky four times a day on the visitor's clock.
+   That mechanic belongs to the sky, and this surface does not have one — a
+   ledger is the same ledger at every hour, which is most of what makes it feel
+   like a different product standing next to the same logo.
+
+   Everything the dayparts existed to vary (field, ink, cloud tint) is a single
+   fixed value at the top of this file, so restoring them later means adding the
+   four :root[data-daypart] blocks back and nothing else.
    ========================================================================== */
-
-/* DAWN 05:00-10:59 — pale rose-violet, the only light-field theme. */
-:root[data-daypart="dawn"] .lotus-root {
-  --lotus-field: #e0c0fe;
-  --lotus-ink: #0a2340;
-  --lotus-ink-soft: rgba(10, 35, 64, 0.7);
-  --lotus-ink-faint: rgba(10, 35, 64, 0.28);
-  --lotus-hairline: rgba(10, 35, 64, 0.2);
-  --lotus-amber: #8a5a05;
-  --lotus-amber-soft: #b8791a;
-  --lotus-periwinkle: #5b3fa8;
-  --lotus-deep: #8e6bd6;
-  --lotus-on-accent: #fffef7;
-  --lotus-cloud: #ffffff;
-  --lotus-cloud-alpha: 0.55;
-}
-:root[data-daypart="dawn"] .lotus-pill--ghost:hover { background: rgba(10, 35, 64, 0.1); }
-:root[data-daypart="dawn"] .lotus-row:hover { background-color: rgba(10, 35, 64, 0.07); }
-
-/* DAY 11:00-16:59 — the sky sampled from the hero art. Cream on it is 5.53:1
-   at full strength; see the note on --lotus-ink-soft for why the soft tone is
-   0.86 here rather than 0.76. */
-:root[data-daypart="day"] .lotus-root {
-  --lotus-field: #0866c9;
-  --lotus-ink: #fffef7;
-  --lotus-ink-soft: rgba(255, 254, 247, 0.86);
-  --lotus-cloud: #ffffff;
-  --lotus-cloud-alpha: 0.82;
-}
-
-/* DUSK 17:00-19:59 — the mauve band of a real dusk, not a burnt orange. */
-:root[data-daypart="dusk"] .lotus-root {
-  --lotus-field: #8a4585;
-  --lotus-ink: #fffef7;
-  --lotus-ink-soft: rgba(255, 254, 247, 0.78);
-  --lotus-hairline: rgba(255, 254, 247, 0.3);
-  --lotus-amber: #ffc978;
-  --lotus-amber-soft: #ffe0ae;
-  --lotus-periwinkle: #f0c8e4;
-  --lotus-deep: #e6b3df;
-  --lotus-on-accent: #2a0c28;
-  --lotus-cloud: #ffdcc4;
-  --lotus-cloud-alpha: 0.7;
-}
-
-/* NIGHT 20:00-04:59 — deep indigo at the logo's own hue. */
-:root[data-daypart="night"] .lotus-root {
-  --lotus-field: #220382;
-  --lotus-ink: #fffef7;
-  --lotus-ink-soft: rgba(255, 254, 247, 0.74);
-  --lotus-ink-faint: rgba(255, 254, 247, 0.3);
-  --lotus-hairline: rgba(255, 254, 247, 0.26);
-  --lotus-deep: #7c86e8;
-  --lotus-cloud: #b9c4ff;
-  --lotus-cloud-alpha: 0.55;
-}
