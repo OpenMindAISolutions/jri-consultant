@@ -2,7 +2,7 @@ import type { ReactNode } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import {
   LayoutDashboard, CalendarClock, Users, Settings as SettingsIcon, LogOut,
-  Building2, BarChart3,
+  Building2, BarChart3, MessageSquare,
 } from 'lucide-react';
 import { BrandMark } from './BrandMark';
 
@@ -22,6 +22,7 @@ const NAV = [
   { to: '/work', label: 'This week', short: 'Week', icon: CalendarClock, phone: true },
   { to: '/clients', label: 'Shared with me', short: 'Shared', icon: Users, phone: true },
   { to: '/managed', label: 'Your clients', short: 'Clients', icon: Building2, phone: true },
+  { to: '/inbox', label: 'Conversations', short: 'Chats', icon: MessageSquare, phone: true },
   { to: '/practice', label: 'Reports', short: 'Reports', icon: BarChart3, phone: false },
   { to: '/settings', label: 'Settings', short: 'Settings', icon: SettingsIcon, phone: true },
 ] as const;

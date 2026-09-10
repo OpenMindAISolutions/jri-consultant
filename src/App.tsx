@@ -17,6 +17,7 @@ import Settings from './pages/Settings';
 import Managed from './pages/Managed';
 import ManagedClient from './pages/ManagedClient';
 import Practice from './pages/Practice';
+import Inbox from './pages/Inbox';
 
 /**
  * Routing and the session gate.
@@ -104,6 +105,7 @@ export default function App() {
         <Route path="/managed" element={<Managed />} />
         <Route path="/managed/:clientId" element={<ManagedClient />} />
         <Route path="/practice" element={<Practice />} />
+        <Route path="/inbox" element={<Inbox />} />
         <Route path="/settings" element={<Settings />} />
         <Route path="/client/:workplaceId" element={<ClientReports />} />
         <Route path="/client/:workplaceId/report/:reportKey" element={<ReportView />} />

@@ -4550,6 +4550,34 @@ export type Database = {
           },
         ]
       }
+      consultant_ai_usage: {
+        Row: {
+          action: string
+          calls: number
+          profile_id: string
+          used_on: string
+        }
+        Insert: {
+          action: string
+          calls?: number
+          profile_id: string
+          used_on?: string
+        }
+        Update: {
+          action?: string
+          calls?: number
+          profile_id?: string
+          used_on?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "consultant_ai_usage_profile_id_fkey"
+            columns: ["profile_id"]
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       consultant_automation_log: {
         Row: {
           created_at: string
@@ -4636,6 +4664,7 @@ export type Database = {
           id: string
           note: string | null
           period_label: string | null
+          queued_message_id: number | null
           sent_at: string | null
           status: string
           title: string
@@ -4649,6 +4678,7 @@ export type Database = {
           id?: string
           note?: string | null
           period_label?: string | null
+          queued_message_id?: number | null
           sent_at?: string | null
           status?: string
           title: string
@@ -4662,6 +4692,7 @@ export type Database = {
           id?: string
           note?: string | null
           period_label?: string | null
+          queued_message_id?: number | null
           sent_at?: string | null
           status?: string
           title?: string
@@ -5264,6 +5295,107 @@ export type Database = {
           },
         ]
       }
+      consultant_whatsapp_delivery: {
+        Row: {
+          connection_id: string | null
+          delivered_at: string | null
+          error: string | null
+          failed_at: string | null
+          message_id: number | null
+          provider_message_id: string
+          read_at: string | null
+          sent_at: string | null
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          connection_id?: string | null
+          delivered_at?: string | null
+          error?: string | null
+          failed_at?: string | null
+          message_id?: number | null
+          provider_message_id: string
+          read_at?: string | null
+          sent_at?: string | null
+          status: string
+          updated_at?: string
+        }
+        Update: {
+          connection_id?: string | null
+          delivered_at?: string | null
+          error?: string | null
+          failed_at?: string | null
+          message_id?: number | null
+          provider_message_id?: string
+          read_at?: string | null
+          sent_at?: string | null
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "consultant_whatsapp_delivery_connection_id_fkey"
+            columns: ["connection_id"]
+            referencedRelation: "consultant_whatsapp_connections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "consultant_whatsapp_delivery_message_id_fkey"
+            columns: ["message_id"]
+            referencedRelation: "consultant_whatsapp_messages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      consultant_whatsapp_inbound: {
+        Row: {
+          body: string | null
+          created_at: string
+          from_phone: string
+          id: number
+          media_id: string | null
+          media_mime: string | null
+          message_type: string
+          provider_message_id: string | null
+          raw: Json | null
+          received_at: string
+          thread_id: string
+        }
+        Insert: {
+          body?: string | null
+          created_at?: string
+          from_phone: string
+          id?: number
+          media_id?: string | null
+          media_mime?: string | null
+          message_type: string
+          provider_message_id?: string | null
+          raw?: Json | null
+          received_at: string
+          thread_id: string
+        }
+        Update: {
+          body?: string | null
+          created_at?: string
+          from_phone?: string
+          id?: number
+          media_id?: string | null
+          media_mime?: string | null
+          message_type?: string
+          provider_message_id?: string | null
+          raw?: Json | null
+          received_at?: string
+          thread_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "consultant_whatsapp_inbound_thread_id_fkey"
+            columns: ["thread_id"]
+            referencedRelation: "consultant_whatsapp_threads"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       consultant_whatsapp_messages: {
         Row: {
           body_preview: string | null
@@ -5271,6 +5403,7 @@ export type Database = {
           created_at: string
           error: string | null
           id: number
+          params: string[] | null
           phone_e164: string
           provider_message_id: string | null
           purpose: string | null
@@ -5285,6 +5418,7 @@ export type Database = {
           created_at?: string
           error?: string | null
           id?: number
+          params?: string[] | null
           phone_e164: string
           provider_message_id?: string | null
           purpose?: string | null
@@ -5299,6 +5433,7 @@ export type Database = {
           created_at?: string
           error?: string | null
           id?: number
+          params?: string[] | null
           phone_e164?: string
           provider_message_id?: string | null
           purpose?: string | null
@@ -5410,6 +5545,67 @@ export type Database = {
             foreignKeyName: "consultant_whatsapp_templates_connection_id_fkey"
             columns: ["connection_id"]
             referencedRelation: "consultant_whatsapp_connections"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      consultant_whatsapp_threads: {
+        Row: {
+          client_id: string | null
+          connection_id: string
+          created_at: string
+          display_name: string | null
+          id: string
+          last_inbound_at: string | null
+          last_message_at: string | null
+          phone_e164: string
+          status: string
+          unread_count: number
+          workplace_id: string | null
+        }
+        Insert: {
+          client_id?: string | null
+          connection_id: string
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          last_inbound_at?: string | null
+          last_message_at?: string | null
+          phone_e164: string
+          status?: string
+          unread_count?: number
+          workplace_id?: string | null
+        }
+        Update: {
+          client_id?: string | null
+          connection_id?: string
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          last_inbound_at?: string | null
+          last_message_at?: string | null
+          phone_e164?: string
+          status?: string
+          unread_count?: number
+          workplace_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "consultant_whatsapp_threads_client_id_fkey"
+            columns: ["client_id"]
+            referencedRelation: "consultant_clients"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "consultant_whatsapp_threads_connection_id_fkey"
+            columns: ["connection_id"]
+            referencedRelation: "consultant_whatsapp_connections"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "consultant_whatsapp_threads_workplace_id_fkey"
+            columns: ["workplace_id"]
+            referencedRelation: "workplaces"
             referencedColumns: ["id"]
           },
         ]
@@ -18968,6 +19164,10 @@ export type Database = {
         }
         Returns: string
       }
+      consultant_ai_claim: {
+        Args: { p_action: string; p_daily_cap?: number }
+        Returns: number
+      }
       consultant_archive_client: {
         Args: { p_client_id: string }
         Returns: undefined
@@ -19039,9 +19239,18 @@ export type Database = {
       }
       consultant_holds_link: { Args: { p_link_id: string }; Returns: boolean }
       consultant_in_firm: { Args: { p_firm_id: string }; Returns: boolean }
+      consultant_inbox: { Args: never; Returns: Json }
       consultant_link_participant: {
         Args: { p_link_id: string }
         Returns: boolean
+      }
+      consultant_link_thread_client: {
+        Args: { p_client_id: string; p_thread_id: string }
+        Returns: undefined
+      }
+      consultant_mark_thread_read: {
+        Args: { p_thread_id: string }
+        Returns: undefined
       }
       consultant_my_client_ids: { Args: never; Returns: string[] }
       consultant_my_clients: {
@@ -19108,6 +19317,14 @@ export type Database = {
         }
         Returns: Json
       }
+      consultant_open_thread: {
+        Args: {
+          p_connection_id: string
+          p_display_name?: string
+          p_phone_e164: string
+        }
+        Returns: string
+      }
       consultant_owns_firm: { Args: { p_firm_id: string }; Returns: boolean }
       consultant_owns_whatsapp: {
         Args: { p_connection_id: string }
@@ -19116,6 +19333,14 @@ export type Database = {
       consultant_practice_report: {
         Args: { p_from?: string; p_kind: string; p_to?: string }
         Returns: Json
+      }
+      consultant_queue_due_reminders: {
+        Args: { p_lead_days?: number; p_limit?: number }
+        Returns: Json
+      }
+      consultant_queue_whatsapp_reply: {
+        Args: { p_body: string; p_thread_id: string }
+        Returns: number
       }
       consultant_request_document: {
         Args: {
@@ -19154,6 +19379,8 @@ export type Database = {
         }
         Returns: undefined
       }
+      consultant_thread: { Args: { p_thread_id: string }; Returns: Json }
+      consultant_thread_window: { Args: { p_thread_id: string }; Returns: Json }
       consultant_weekly_digest: {
         Args: { p_dry_run?: boolean; p_limit?: number }
         Returns: Json
@@ -20509,6 +20736,7 @@ export type Database = {
         Args: {
           p_body_preview?: string
           p_connection_id: string
+          p_params?: string[]
           p_phone_e164: string
           p_purpose: string
           p_workplace_id?: string
@@ -20693,6 +20921,21 @@ export type Database = {
         }
         Returns: string
       }
+      record_whatsapp_inbound: {
+        Args: {
+          p_body?: string
+          p_display_name?: string
+          p_from_phone: string
+          p_media_id?: string
+          p_media_mime?: string
+          p_message_type: string
+          p_phone_number_id: string
+          p_provider_message_id: string
+          p_raw?: Json
+          p_received_at?: string
+        }
+        Returns: Json
+      }
       record_whatsapp_optin: {
         Args: {
           p_connection_id: string
@@ -20705,6 +20948,16 @@ export type Database = {
       record_whatsapp_optout: {
         Args: { p_connection_id: string; p_phone_e164: string }
         Returns: undefined
+      }
+      record_whatsapp_status: {
+        Args: {
+          p_at?: string
+          p_error?: string
+          p_phone_number_id: string
+          p_provider_message_id: string
+          p_status: string
+        }
+        Returns: Json
       }
       record_withholding_document: {
         Args: {
@@ -21544,6 +21797,12 @@ export type Database = {
       verify_user_password: { Args: { password: string }; Returns: boolean }
       waive_compliance_dependency: {
         Args: { p_instance_id: string }
+        Returns: Json
+      }
+      whatsapp_normalise_phone: { Args: { p_phone: string }; Returns: string }
+      whatsapp_status_rank: { Args: { p_status: string }; Returns: number }
+      whatsapp_window_state: {
+        Args: { p_last_inbound_at: string }
         Returns: Json
       }
       workplace_consultants_overview: {
