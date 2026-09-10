@@ -15,6 +15,7 @@ import { myClients, myFirm, type Client, type MyFirm } from '../lib/api';
 import { documentMessage, paymentMessage, prettyPhone, reminderMessage, waLink } from '../lib/promo';
 import { buildUpiUri, maskAccount, upiProblem } from '../lib/upi';
 import { UpiQr } from '../components/UpiQr';
+import { MessageComposer } from '../components/MessageComposer';
 import { Spinner } from '../components/Shell';
 import { Badge, Button, Notice, PageTitle, Section, fieldClass } from '../components/ui';
 import { Field } from './Managed';
@@ -141,6 +142,12 @@ export default function ManagedClient() {
             history={history}
             onChange={load}
             onError={setError}
+          />
+
+          <MessageComposer
+            clientId={c.id}
+            clientName={c.contact_name || c.name}
+            phone={c.phone_e164}
           />
 
           <ComplianceCalendar client={c} onChange={load} onError={setError} />

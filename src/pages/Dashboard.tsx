@@ -2,10 +2,11 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   AlertTriangle, ArrowRight, Building2, CalendarClock, FileQuestion,
-  MessageSquare, ShieldCheck, TrendingUp, Users,
+  MessageSquare, ShieldCheck, Sparkles, TrendingUp, Users,
 } from 'lucide-react';
 import { myWork, myClients, type WorkItem, type Client } from '../lib/api';
 import { myManagedClients, type ManagedClient } from '../lib/funnel';
+import { practiceSummary } from '../lib/ai';
 import { Spinner } from '../components/Shell';
 import { Badge, Notice, PageTitle, Section } from '../components/ui';
 
@@ -56,6 +57,16 @@ export default function Dashboard() {
   const [book, setBook] = useState<ManagedClient[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  /**
+   * The AI brief, and it is deliberately ON DEMAND rather than on load.
+   *
+   * A summary generated every time somebody opens the dashboard is a DeepSeek call every time
+   * somebody opens the dashboard — for a paragraph most visits do not need, since the counts and
+   * the list below already say the same thing at a glance. The button is the consent.
+   */
+  const [brief, setBrief] = useState<string | null>(null);
+  const [briefBusy, setBriefBusy] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -123,6 +134,34 @@ export default function Dashboard() {
             : `${work.length} open item${work.length === 1 ? '' : 's'} across ${clients.length} client${clients.length === 1 ? '' : 's'}.`
         }
       />
+
+      {/* One paragraph on what needs them, written from the reminders report. */}
+      <div className="mb-5 rounded-2xl border border-border bg-card p-4">
+        {brief ? (
+          <p className="text-sm leading-relaxed">{brief}</p>
+        ) : (
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <p className="text-sm text-muted-foreground">
+              Want it in a sentence? The AI reads your reminders and tells you what is pressing.
+            </p>
+            <button
+              type="button"
+              disabled={briefBusy}
+              onClick={() => {
+                setBriefBusy(true);
+                void practiceSummary()
+                  .then(setBrief)
+                  .catch((e) => setBrief(e instanceof Error ? e.message : 'Could not write a summary.'))
+                  .finally(() => setBriefBusy(false));
+              }}
+              className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-border px-3 py-1.5 text-[11.5px] font-semibold text-muted-foreground transition hover:text-foreground disabled:opacity-50"
+            >
+              <Sparkles className="h-3.5 w-3.5" />
+              {briefBusy ? 'Reading your week…' : 'Brief me'}
+            </button>
+          </div>
+        )}
+      </div>
 
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         {stats.map((s) => {
