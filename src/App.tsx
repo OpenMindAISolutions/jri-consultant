@@ -12,6 +12,9 @@ import Clients from './pages/Clients';
 import ClientReports from './pages/ClientReports';
 import ReportView from './pages/ReportView';
 import Settings from './pages/Settings';
+import Managed from './pages/Managed';
+import ManagedClient from './pages/ManagedClient';
+import Practice from './pages/Practice';
 
 /**
  * Routing and the session gate.
@@ -82,6 +85,12 @@ export default function App() {
         <Route path="/" element={<Dashboard />} />
         <Route path="/work" element={<ThisWeek />} />
         <Route path="/clients" element={<Clients />} />
+        {/* The off-platform book. `/clients` is what businesses shared WITH the consultant;
+            `/managed` is the consultant's own record of businesses that are not on JRI at all.
+            Two different trust stories, so two different routes and never one merged list. */}
+        <Route path="/managed" element={<Managed />} />
+        <Route path="/managed/:clientId" element={<ManagedClient />} />
+        <Route path="/practice" element={<Practice />} />
         <Route path="/settings" element={<Settings />} />
         <Route path="/client/:workplaceId" element={<ClientReports />} />
         <Route path="/client/:workplaceId/report/:reportKey" element={<ReportView />} />

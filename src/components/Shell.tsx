@@ -1,13 +1,28 @@
 import type { ReactNode } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { LayoutDashboard, CalendarClock, Users, Settings as SettingsIcon, LogOut, Briefcase } from 'lucide-react';
+import {
+  LayoutDashboard, CalendarClock, Users, Settings as SettingsIcon, LogOut, Briefcase,
+  Building2, BarChart3,
+} from 'lucide-react';
 
-/** One source for both navigations, so the top bar and the phone bar can never disagree. */
+/**
+ * One source for both navigations, so the top bar and the phone bar can never disagree.
+ *
+ * `short` exists because a phone is 375px wide and five labels have to fit across it. `phone: false`
+ * keeps an entry off the bottom bar entirely — six thumb targets in a row is a mis-tap, and Reports
+ * is something a consultant opens deliberately rather than flicks between.
+ *
+ * THE TWO CLIENT ENTRIES ARE NOT A DUPLICATE. "Shared" is what businesses on JRI have shared with
+ * this consultant. "Clients" is the consultant's own book of businesses that are NOT on JRI. Naming
+ * them apart in the navigation is the cheapest place to teach that difference.
+ */
 const NAV = [
-  { to: '/', label: 'Dashboard', icon: LayoutDashboard },
-  { to: '/work', label: 'This week', icon: CalendarClock },
-  { to: '/clients', label: 'Clients', icon: Users },
-  { to: '/settings', label: 'Settings', icon: SettingsIcon },
+  { to: '/', label: 'Dashboard', short: 'Home', icon: LayoutDashboard, phone: true },
+  { to: '/work', label: 'This week', short: 'Week', icon: CalendarClock, phone: true },
+  { to: '/clients', label: 'Shared with me', short: 'Shared', icon: Users, phone: true },
+  { to: '/managed', label: 'Your clients', short: 'Clients', icon: Building2, phone: true },
+  { to: '/practice', label: 'Reports', short: 'Reports', icon: BarChart3, phone: false },
+  { to: '/settings', label: 'Settings', short: 'Settings', icon: SettingsIcon, phone: true },
 ] as const;
 import { supabase } from '../lib/supabase';
 import { NotificationBell } from './NotificationBell';
@@ -61,7 +76,7 @@ export function Shell({ children, email }: { children: ReactNode; email?: string
         className="fixed inset-x-0 bottom-0 z-20 flex border-t border-border bg-card/95 backdrop-blur md:hidden"
         aria-label="Sections"
       >
-        {NAV.map((n) => {
+        {NAV.filter((n) => n.phone).map((n) => {
           const Icon = n.icon;
           const active = pathname === n.to || (n.to !== '/' && pathname.startsWith(n.to));
           return (
@@ -72,7 +87,7 @@ export function Shell({ children, email }: { children: ReactNode; email?: string
               style={{ color: active ? 'hsl(var(--jri-lavender))' : 'hsl(var(--muted-foreground))' }}
             >
               <Icon className="h-[18px] w-[18px]" />
-              {n.label}
+              {n.short}
             </Link>
           );
         })}

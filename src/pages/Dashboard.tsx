@@ -2,9 +2,10 @@ import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import {
   AlertTriangle, ArrowRight, Building2, CalendarClock, FileQuestion,
-  MessageSquare, ShieldCheck, Users,
+  MessageSquare, ShieldCheck, TrendingUp, Users,
 } from 'lucide-react';
 import { myWork, myClients, type WorkItem, type Client } from '../lib/api';
+import { myManagedClients, type ManagedClient } from '../lib/funnel';
 import { Spinner } from '../components/Shell';
 import { Badge, Notice, PageTitle, Section } from '../components/ui';
 
@@ -52,6 +53,7 @@ const KIND_ICON = {
 export default function Dashboard() {
   const [work, setWork] = useState<WorkItem[]>([]);
   const [clients, setClients] = useState<Client[]>([]);
+  const [book, setBook] = useState<ManagedClient[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -65,6 +67,21 @@ export default function Dashboard() {
       })
       .catch((e) => !cancelled && setError(e instanceof Error ? e.message : 'Could not load your dashboard.'))
       .finally(() => !cancelled && setLoading(false));
+    return () => { cancelled = true; };
+  }, []);
+
+  /**
+   * The off-platform book, loaded separately and allowed to fail quietly.
+   *
+   * It is a different question from "what did my JRI clients share with me", and a consultant with
+   * no book at all is the normal case on day one — so a failure here must never take down a
+   * dashboard whose other half is fine.
+   */
+  useEffect(() => {
+    let cancelled = false;
+    void myManagedClients()
+      .then((b) => { if (!cancelled) setBook(b ?? []); })
+      .catch(() => { /* no book, or it could not be read; the panel invites them to start one */ });
     return () => { cancelled = true; };
   }, []);
 
@@ -169,7 +186,7 @@ export default function Dashboard() {
 
         <Section
           className="lg:col-span-2"
-          title="Your clients"
+          title="Shared with you"
           icon={<Building2 className="h-4 w-4" />}
           actions={
             <Link to="/clients" className="inline-flex items-center gap-1 text-[11.5px] text-muted-foreground transition hover:text-foreground">
@@ -202,6 +219,75 @@ export default function Dashboard() {
                 );
               })}
             </ul>
+          )}
+        </Section>
+
+        {/* The other half of a practice: businesses that are NOT on JRI. It sits on the dashboard
+            because the conversion count is the one number this whole side of the product exists to
+            move, and a number nobody passes on the way to work is a number nobody watches. */}
+        <Section
+          className="lg:col-span-2 lg:col-start-4"
+          title="Your own clients"
+          subtitle="Businesses you look after that are not on JRI."
+          icon={<Building2 className="h-4 w-4" />}
+          actions={
+            <Link to="/managed" className="inline-flex items-center gap-1 text-[11.5px] text-muted-foreground transition hover:text-foreground">
+              Open <ArrowRight className="h-3 w-3" />
+            </Link>
+          }
+        >
+          {book.length === 0 ? (
+            <p className="py-5 text-sm leading-relaxed text-muted-foreground">
+              Add a business you already look after. You can send WhatsApp reminders, hold their
+              documents and ask to be paid — and every message invites them onto JRI.
+            </p>
+          ) : (
+            <>
+              <div className="grid grid-cols-2 gap-2.5">
+                <div className="rounded-xl border border-border p-3">
+                  <p className="text-[11px] text-muted-foreground">On your books</p>
+                  <p className="mt-1 text-xl font-semibold tabular-nums">
+                    {book.filter((b) => b.status === 'active').length}
+                  </p>
+                </div>
+                <div className="rounded-xl border border-border p-3">
+                  <p className="text-[11px] text-muted-foreground">Joined JRI</p>
+                  <p className="mt-1 text-xl font-semibold tabular-nums"
+                     style={{ color: 'hsl(var(--status-ok))' }}>
+                    {book.filter((b) => b.converted_workplace_id).length}
+                  </p>
+                </div>
+              </div>
+              {(() => {
+                const soon = book
+                  .filter((b) => b.next_due_date)
+                  .sort((a, b) => (a.next_due_date! < b.next_due_date! ? -1 : 1))
+                  .slice(0, 3);
+                if (soon.length === 0) return null;
+                return (
+                  <ul className="mt-3 divide-y divide-border">
+                    {soon.map((b) => {
+                      const late = new Date(`${b.next_due_date}T00:00:00`).getTime() < now;
+                      return (
+                        <li key={b.id} className="py-2 first:pt-0 last:pb-0">
+                          <Link to={`/managed/${b.id}`} className="flex items-center justify-between gap-2">
+                            <span className="min-w-0 truncate text-xs">{b.name}</span>
+                            <Badge tone={late ? 'danger' : 'warn'}>
+                              {late ? 'overdue' : 'due'}
+                            </Badge>
+                          </Link>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                );
+              })()}
+              <Link to="/practice"
+                    className="mt-3 inline-flex items-center gap-1 text-[11.5px] font-semibold"
+                    style={{ color: 'hsl(var(--jri-lavender))' }}>
+                <TrendingUp className="h-3 w-3" /> See your practice reports
+              </Link>
+            </>
           )}
         </Section>
       </div>

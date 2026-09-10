@@ -1,6 +1,12 @@
 import { useCallback, useEffect, useState } from 'react';
 import { fieldClass, Notice } from '../components/ui';
-import { MessageCircle, Building2, Plus, Trash2, ShieldCheck, Loader2, AlertTriangle } from 'lucide-react';
+import {
+  MessageCircle, Building2, Plus, Trash2, ShieldCheck, Loader2, AlertTriangle, IndianRupee,
+} from 'lucide-react';
+import { Badge, Button, Section } from '../components/ui';
+import { myPaymentDetails, savePaymentDetails, type PaymentDetails } from '../lib/funnel';
+import { buildUpiUri, isLikelyIfsc, isLikelyVpa } from '../lib/upi';
+import { UpiQr } from '../components/UpiQr';
 import {
   whatsappOverview, connectWhatsApp, disconnectWhatsApp, saveWhatsAppTemplate,
   recordOptin, recordOptout, createFirm, addFirmMember, myFirm,
@@ -322,6 +328,153 @@ export default function Settings() {
           </>
         )}
       </section>
+
+      <PaymentPanel firmId={firmId} firmLabel={firmLabel} />
     </div>
+  );
+}
+
+/**
+ * How an off-platform client pays you.
+ *
+ * WHY IT LIVES IN SETTINGS AND NOT ON A CLIENT SCREEN. These details belong to the CONSULTANT, not
+ * to any one client — the same reasoning that puts the firm and the WhatsApp account here. Typing a
+ * UPI ID once and using it for forty clients is the whole point; a per-client field would be forty
+ * chances to paste it wrong.
+ *
+ * THE QR IS SHOWN BACK IMMEDIATELY, deliberately. A wrong digit in a UPI ID is invisible in a text
+ * field and catastrophic in a payment — the money reaches a real person, just not you. Rendering the
+ * QR here means the first thing a consultant does after saving is scan their own code, which is the
+ * only check that actually proves the handle resolves.
+ */
+function PaymentPanel({ firmId, firmLabel }: { firmId: string | null; firmLabel: string | null }) {
+  const [d, setD] = useState<PaymentDetails | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [saving, setSaving] = useState(false);
+  const [err, setErr] = useState<string | null>(null);
+  const [saved, setSaved] = useState(false);
+  const [f, setF] = useState({
+    upiId: '', bankAccountName: '', bankAccountNumber: '', bankIfsc: '', paymentNote: '',
+    asFirm: false,
+  });
+
+  const load = useCallback(async () => {
+    try {
+      const got = await myPaymentDetails();
+      setD(got);
+      if (got) {
+        setF({
+          upiId: got.upi_id ?? '', bankAccountName: got.bank_account_name ?? '',
+          bankAccountNumber: got.bank_account_number ?? '', bankIfsc: got.bank_ifsc ?? '',
+          paymentNote: got.payment_note ?? '', asFirm: got.firm_id != null,
+        });
+      }
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : 'Could not load your payment details.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+  useEffect(() => { void load(); }, [load]);
+
+  const vpaBad = f.upiId.trim() !== '' && !isLikelyVpa(f.upiId);
+  const ifscBad = f.bankIfsc.trim() !== '' && !isLikelyIfsc(f.bankIfsc);
+  const preview = isLikelyVpa(f.upiId)
+    ? buildUpiUri({ vpa: f.upiId, payeeName: f.bankAccountName || firmLabel || null })
+    : null;
+
+  const submit = async () => {
+    if (vpaBad || ifscBad) { setErr('Fix the highlighted field before saving.'); return; }
+    setSaving(true); setErr(null); setSaved(false);
+    try {
+      await savePaymentDetails({
+        upiId: f.upiId, bankAccountName: f.bankAccountName, bankAccountNumber: f.bankAccountNumber,
+        bankIfsc: f.bankIfsc, paymentNote: f.paymentNote,
+        firmId: f.asFirm ? firmId : null,
+      });
+      setSaved(true);
+      await load();
+    } catch (e) {
+      setErr(e instanceof Error ? e.message : 'Could not save those details.');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (loading) return null;
+
+  return (
+    <Section
+      title="How you get paid"
+      subtitle="Used when you send a payment request to a business that is not on JRI. Nobody on the platform sees these."
+      icon={<IndianRupee className="h-4 w-4" />}
+      actions={d?.source === 'firm' ? <Badge tone="accent">from {firmLabel ?? 'your firm'}</Badge> : undefined}
+    >
+      {err && <Notice className="mb-3">{err}</Notice>}
+      {saved && !err && <Notice tone="ok" className="mb-3">Saved. Scan the code below with your own UPI app to be sure it resolves to you.</Notice>}
+
+      <div className="grid gap-3 sm:grid-cols-2">
+        <label className="block sm:col-span-2">
+          <span className="mb-1 block text-[11.5px] font-medium text-muted-foreground">UPI ID</span>
+          <input className={input} value={f.upiId} placeholder="yourname@okhdfcbank"
+                 onChange={(e) => { setF({ ...f, upiId: e.target.value }); setSaved(false); }} />
+          {vpaBad && (
+            <span className="mt-1 block text-[10.5px]" style={{ color: 'hsl(var(--status-danger))' }}>
+              That does not look like a UPI ID — it should read like name@bank.
+            </span>
+          )}
+        </label>
+
+        <label className="block">
+          <span className="mb-1 block text-[11.5px] font-medium text-muted-foreground">Account name</span>
+          <input className={input} value={f.bankAccountName} placeholder="As it appears on the account"
+                 onChange={(e) => setF({ ...f, bankAccountName: e.target.value })} />
+        </label>
+        <label className="block">
+          <span className="mb-1 block text-[11.5px] font-medium text-muted-foreground">Account number</span>
+          <input className={input} value={f.bankAccountNumber}
+                 onChange={(e) => setF({ ...f, bankAccountNumber: e.target.value })} />
+        </label>
+        <label className="block">
+          <span className="mb-1 block text-[11.5px] font-medium text-muted-foreground">IFSC</span>
+          <input className={input} value={f.bankIfsc}
+                 onChange={(e) => setF({ ...f, bankIfsc: e.target.value.toUpperCase() })} />
+          {ifscBad && (
+            <span className="mt-1 block text-[10.5px]" style={{ color: 'hsl(var(--status-danger))' }}>
+              An IFSC is four letters, a zero, then six more characters.
+            </span>
+          )}
+        </label>
+        <label className="block">
+          <span className="mb-1 block text-[11.5px] font-medium text-muted-foreground">Note on every request</span>
+          <input className={input} value={f.paymentNote} placeholder="Please quote the invoice number"
+                 onChange={(e) => setF({ ...f, paymentNote: e.target.value })} />
+        </label>
+
+        {firmId && (
+          <label className="flex items-start gap-2 sm:col-span-2">
+            <input type="checkbox" className="mt-0.5" checked={f.asFirm}
+                   onChange={(e) => setF({ ...f, asFirm: e.target.checked })} />
+            <span className="text-xs leading-relaxed text-muted-foreground">
+              Publish these as <strong className="text-foreground">{firmLabel ?? 'the firm'}</strong>'s
+              details, so colleagues quote the firm's account instead of their own. Only a principal can.
+            </span>
+          </label>
+        )}
+      </div>
+
+      <div className="mt-4 flex flex-wrap items-center gap-3">
+        <Button tone="primary" busy={saving} onClick={() => void submit()}>Save</Button>
+        {preview && (
+          <span className="text-[10.5px] text-muted-foreground">Check the code before you send it to anyone.</span>
+        )}
+      </div>
+
+      {preview && (
+        <div className="mt-4 border-t border-border pt-4">
+          <UpiQr uri={preview} size={168} label={`Any amount to ${f.upiId}`} />
+        </div>
+      )}
+    </Section>
   );
 }
