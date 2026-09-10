@@ -22,6 +22,25 @@
  *
  * The consequence for copy: an API template's text is fixed by Meta at approval time, so the line
  * below has to survive being pasted into a template submission unchanged. Keep it one sentence.
+ *
+ * ★ THE CATEGORY PROBLEM, WHICH HAS TO BE DECIDED BEFORE ANY TEMPLATE IS SUBMITTED. ★
+ *
+ * Meta sorts templates into UTILITY (an account or transaction update) and MARKETING (a promotion
+ * or invitation), and it re-categorises or rejects a UTILITY template that carries promotional
+ * content. A deadline reminder is textbook UTILITY — until `PROMO_LINE` is appended to it, at which
+ * point it is arguably MARKETING: more expensive per conversation, stricter opt-in, and separately
+ * blockable by the recipient.
+ *
+ * NONE OF THAT APPLIES TO THE wa.me PATH. A message the consultant sends from their own phone is
+ * free-form: no template, no category, no per-conversation fee. So the funnel runs unrestricted
+ * exactly where it is unrestricted, and that is an argument for the deep link being the primary
+ * path rather than a stopgap.
+ *
+ * WHEN TEMPLATES ARRIVE, the likely shape is: submit reminder templates as UTILITY WITHOUT this
+ * line, and keep the promotion on the wa.me path (or a separate, occasional MARKETING template).
+ * That needs one change here — a `promo: false` option on the composers — and it is deliberately
+ * NOT written yet, because the right answer depends on how Meta actually categorises the first
+ * submission and guessing it now would be one more untested branch.
  */
 
 /**
