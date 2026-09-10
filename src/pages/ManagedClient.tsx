@@ -7,7 +7,9 @@ import {
 import {
   addReminder, archiveClient, cancelReminder, managedClientDetail, myPaymentDetails, saveClient,
   signedFileUrl, uploadClientFile, convertClient, prettyBytes, generateCalendar, OBLIGATION_TAGS,
-  type GeneratedCalendar, type ManagedClientDetail, type PaymentDetails, type SaveClientInput,
+  obligationCatalogue,
+  type GeneratedCalendar, type ManagedClientDetail, type ObligationRow, type PaymentDetails,
+  type SaveClientInput,
 } from '../lib/funnel';
 import { myClients, myFirm, type Client, type MyFirm } from '../lib/api';
 import { paymentMessage, prettyPhone, reminderMessage, waLink } from '../lib/promo';
@@ -483,6 +485,29 @@ function ComplianceCalendar({
   const [busy, setBusy] = useState(false);
   const [result, setResult] = useState<GeneratedCalendar | null>(null);
   const [open, setOpen] = useState(false);
+  const [catalogue, setCatalogue] = useState<ObligationRow[] | null>(null);
+
+  // Loaded when the panel is opened, not on mount: most visits to a client screen are not about
+  // the calendar, and this is reference data that changes when a statute does.
+  useEffect(() => {
+    if (!open || catalogue) return;
+    void obligationCatalogue().then(setCatalogue).catch(() => { /* the preview simply stays hidden */ });
+  }, [open, catalogue]);
+
+  /**
+   * What is about to be added, before it is added.
+   *
+   * The matching rule is the server's, restated: an obligation with no tags applies to everybody,
+   * otherwise it needs one of the ticks. Reading the count back from the real catalogue also
+   * quietly cross-checks the tag list hard-coded in this app against the one in the database — if
+   * they ever drift, this number goes wrong in a place somebody is looking at.
+   */
+  const matching = useMemo(() => {
+    if (!catalogue) return null;
+    return catalogue.filter(
+      (o) => o.applies_when.length === 0 || o.applies_when.some((t) => tags.includes(t)),
+    );
+  }, [catalogue, tags]);
 
   const run = async () => {
     if (tags.length === 0) { onError('Tick at least one thing that applies to them.'); return; }
@@ -546,6 +571,26 @@ function ComplianceCalendar({
             <Field label="To" hint="Up to 18 months at a time."><input type="date" className={fieldClass}
                                      value={to} onChange={(e) => setTo(e.target.value)} /></Field>
           </div>
+
+          {matching && (
+            <details className="rounded-xl border border-border px-3 py-2">
+              <summary className="cursor-pointer text-[11.5px] text-muted-foreground transition hover:text-foreground">
+                {matching.length} obligation{matching.length === 1 ? '' : 's'} apply — see which
+              </summary>
+              <ul className="mt-2 space-y-1.5">
+                {matching.map((o) => (
+                  <li key={o.key}>
+                    <p className="text-[11.5px] font-medium">{o.label}</p>
+                    <p className="text-[10.5px] leading-relaxed text-muted-foreground">{o.authority}</p>
+                    {o.note && (
+                      <p className="mt-0.5 text-[10.5px] leading-relaxed"
+                         style={{ color: 'hsl(var(--status-warn))' }}>{o.note}</p>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </details>
+          )}
 
           <div className="flex flex-wrap items-center gap-2">
             <Button tone="primary" busy={busy} onClick={() => void run()}>Fill the calendar</Button>
