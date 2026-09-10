@@ -5,7 +5,8 @@ import {
 } from 'lucide-react';
 import { Badge, Button, Section } from '../components/ui';
 import { myPaymentDetails, savePaymentDetails, type PaymentDetails } from '../lib/funnel';
-import { buildUpiUri, isLikelyIfsc, isLikelyVpa } from '../lib/upi';
+import { PROMO_LINE } from '../lib/promo';
+import { buildUpiUri, isLikelyIfsc, isLikelyVpa, isPlausibleAccount } from '../lib/upi';
 import { UpiQr } from '../components/UpiQr';
 import {
   whatsappOverview, connectWhatsApp, disconnectWhatsApp, saveWhatsAppTemplate,
@@ -330,6 +331,26 @@ export default function Settings() {
       </section>
 
       <PaymentPanel firmId={firmId} firmLabel={firmLabel} />
+
+      {/* WHY THIS IS SHOWN RATHER THAN ASSUMED. Every reminder, document request and payment
+          request this app composes ends with the line below, and it goes out under the
+          CONSULTANT's name from the CONSULTANT's number. Somebody sending marketing they have
+          never read is a problem whether or not they would have objected to it, so it is on the
+          settings screen in full rather than described in a help page. */}
+      <Section
+        title="What every message ends with"
+        subtitle="Added to each reminder, document request and payment request you send from here."
+        icon={<ShieldCheck className="h-4 w-4" />}
+      >
+        <p className="whitespace-pre-wrap rounded-xl bg-accent/10 px-3.5 py-3 text-xs leading-relaxed text-muted-foreground">
+          {PROMO_LINE}
+        </p>
+        <p className="mt-2.5 text-[11px] leading-relaxed text-muted-foreground">
+          It is one line, it is added once however many times you edit a message, and it is the
+          reason the platform stays free for you. If a client joins through it, record it on their
+          page and it shows up in your practice reports.
+        </p>
+      </Section>
     </div>
   );
 }
@@ -379,12 +400,15 @@ function PaymentPanel({ firmId, firmLabel }: { firmId: string | null; firmLabel:
 
   const vpaBad = f.upiId.trim() !== '' && !isLikelyVpa(f.upiId);
   const ifscBad = f.bankIfsc.trim() !== '' && !isLikelyIfsc(f.bankIfsc);
+  // Indian account numbers have no national format — 9 to 18 digits, some banks use letters — so
+  // this only catches the shapes that cannot be an account at all. Anything stricter rejects real ones.
+  const acctBad = f.bankAccountNumber.trim() !== '' && !isPlausibleAccount(f.bankAccountNumber);
   const preview = isLikelyVpa(f.upiId)
     ? buildUpiUri({ vpa: f.upiId, payeeName: f.bankAccountName || firmLabel || null })
     : null;
 
   const submit = async () => {
-    if (vpaBad || ifscBad) { setErr('Fix the highlighted field before saving.'); return; }
+    if (vpaBad || ifscBad || acctBad) { setErr('Fix the highlighted field before saving.'); return; }
     setSaving(true); setErr(null); setSaved(false);
     try {
       await savePaymentDetails({
@@ -434,6 +458,11 @@ function PaymentPanel({ firmId, firmLabel }: { firmId: string | null; firmLabel:
           <span className="mb-1 block text-[11.5px] font-medium text-muted-foreground">Account number</span>
           <input className={input} value={f.bankAccountNumber}
                  onChange={(e) => setF({ ...f, bankAccountNumber: e.target.value })} />
+          {acctBad && (
+            <span className="mt-1 block text-[10.5px]" style={{ color: 'hsl(var(--status-danger))' }}>
+              An account number is 6 to 20 letters or digits, with no spaces or dashes.
+            </span>
+          )}
         </label>
         <label className="block">
           <span className="mb-1 block text-[11.5px] font-medium text-muted-foreground">IFSC</span>

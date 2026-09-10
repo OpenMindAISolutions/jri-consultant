@@ -12,7 +12,7 @@ import {
   type SaveClientInput,
 } from '../lib/funnel';
 import { myClients, myFirm, type Client, type MyFirm } from '../lib/api';
-import { paymentMessage, prettyPhone, reminderMessage, waLink } from '../lib/promo';
+import { documentMessage, paymentMessage, prettyPhone, reminderMessage, waLink } from '../lib/promo';
 import { buildUpiUri, maskAccount, upiProblem } from '../lib/upi';
 import { UpiQr } from '../components/UpiQr';
 import { Spinner } from '../components/Shell';
@@ -145,7 +145,12 @@ export default function ManagedClient() {
 
           <ComplianceCalendar client={c} onChange={load} onError={setError} />
 
-          <Files clientId={c.id} files={d.files} onChange={load} onError={setError} />
+          <Files
+            clientId={c.id} files={d.files}
+            clientName={c.contact_name || c.name} phone={c.phone_e164}
+            fromName={firm?.name ?? null}
+            onChange={load} onError={setError}
+          />
         </div>
 
         <div className="space-y-4 lg:col-span-2">
@@ -640,15 +645,35 @@ function ComplianceCalendar({
  * check who read them.
  */
 function Files({
-  clientId, files, onChange, onError,
+  clientId, files, clientName, phone, fromName, onChange, onError,
 }: {
   clientId: string;
   files: ManagedClientDetail['files'];
+  clientName: string;
+  phone: string | null;
+  fromName: string | null;
   onChange: () => Promise<void>;
   onError: (m: string) => void;
 }) {
   const [busy, setBusy] = useState(false);
   const [opening, setOpening] = useState<string | null>(null);
+  const [asking, setAsking] = useState(false);
+  const [ask, setAsk] = useState({ what: '', by: '' });
+
+  /**
+   * Asking for a document, which is the only way one ever arrives.
+   *
+   * A business that is not on JRI has no account, no upload screen and no way to send anything
+   * except back down the channel the ask arrived on. So this composes the request, the client
+   * replies on WhatsApp with a photo or a PDF, and the consultant files it with "Add files" above.
+   * The round trip is manual on purpose — the alternative is asking somebody with no account to
+   * trust a link, which is exactly the shape of every phishing message they have been warned about.
+   */
+  const askLink = ask.what.trim()
+    ? waLink(phone, documentMessage({
+        clientName, what: ask.what.trim(), byDate: ask.by || null, fromName,
+      }))
+    : null;
 
   const upload = async (list: FileList | null) => {
     if (!list || list.length === 0) return;
@@ -683,6 +708,10 @@ function Files({
       subtitle="What they have sent you. Stored privately — only you and your firm can open these."
       icon={<FileText className="h-4 w-4" />}
       actions={
+        <>
+        <Button size="sm" onClick={() => setAsking((v) => !v)}>
+          {asking ? 'Close' : 'Ask for one'}
+        </Button>
         <label className="inline-flex cursor-pointer items-center gap-1.5 rounded-lg border border-border px-2.5 py-1 text-[11.5px] font-semibold text-muted-foreground transition hover:text-foreground">
           {busy ? (
             <span className="h-3 w-3 animate-spin rounded-full border-2 border-current border-t-transparent" />
@@ -693,8 +722,36 @@ function Files({
           <input type="file" multiple className="hidden" disabled={busy}
                  onChange={(e) => { void upload(e.target.files); e.target.value = ''; }} />
         </label>
+        </>
       }
     >
+      {asking && (
+        <div className="mb-4 space-y-3 rounded-xl border border-border p-3.5">
+          <div className="grid gap-3 sm:grid-cols-2">
+            <Field label="What do you need" required>
+              <input className={fieldClass} value={ask.what} autoFocus
+                     placeholder="last month's bank statement"
+                     onChange={(e) => setAsk({ ...ask, what: e.target.value })} />
+            </Field>
+            <Field label="By when" hint="Optional.">
+              <input type="date" className={fieldClass} value={ask.by}
+                     onChange={(e) => setAsk({ ...ask, by: e.target.value })} />
+            </Field>
+          </div>
+          {askLink ? (
+            <a href={askLink} target="_blank" rel="noreferrer"
+               className="inline-flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold text-white transition hover:opacity-90"
+               style={{ background: 'hsl(var(--jri-lavender))' }}>
+              <MessageCircle className="h-3.5 w-3.5" /> Ask on WhatsApp
+            </a>
+          ) : (
+            <p className="text-[11px] text-muted-foreground">
+              {phone ? 'Say what you need and the message writes itself.'
+                     : 'Add a WhatsApp number to this client first.'}
+            </p>
+          )}
+        </div>
+      )}
       {files.length === 0 ? (
         <p className="py-5 text-center text-sm text-muted-foreground">
           Nothing filed yet. Add what they send you — a GST return, a bank statement, a signed form —

@@ -24,20 +24,31 @@
  * below has to survive being pasted into a template submission unchanged. Keep it one sentence.
  */
 
-/** Where a business that reads one of these messages actually lands. */
-export const PROMO_URL = 'https://user.jri.ai';
+/**
+ * Where a business that reads one of these messages actually lands.
+ *
+ * `jri.ai`, not `user.jri.ai`. It is shorter in a message where every character is read, it is the
+ * brand somebody might already have heard, and the front door routes to signup anyway — whereas
+ * `user.jri.ai` reads like an internal hostname that leaked into an advertisement.
+ */
+export const PROMO_URL = 'https://jri.ai';
 
 /**
  * The most-read sentence in the product — it rides on every reminder, every payment request and
  * every document chase this app composes.
  *
- * Written from the brief: manage the business on jri.ai, ten times the value, five times the time
- * saved, with AI and automation. It claims a multiple and not a rupee figure on purpose; a number
- * with a currency symbol is a promise somebody will hold us to.
+ * SHORT ON PURPOSE, and shortened once already. It sits at the bottom of a message somebody opened
+ * to find out when their GST is due; the longer it is, the more it reads as the point of the
+ * message rather than a footnote to it. One line, both numbers, one link, no second sentence.
+ *
+ * It claims a multiple and never a rupee figure: a number with a currency symbol is a promise
+ * somebody will hold us to.
+ *
+ * It also has to survive being pasted verbatim into a Meta template submission, because an approved
+ * WhatsApp template's text is fixed at approval time and cannot be edited per message.
  */
 export const PROMO_LINE =
-  `Manage your whole business on JRI.AI — 10x the value, 5x the time saved, with AI and automation. ` +
-  `Start free: ${PROMO_URL}`;
+  `10x the value, 5x the time saved — run your business with AI on ${PROMO_URL}`;
 
 /** Appends the promotional line, exactly once, separated so it never reads as part of the message. */
 export function withPromo(body: string): string {
