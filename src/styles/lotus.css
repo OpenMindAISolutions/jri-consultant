@@ -28,13 +28,36 @@
      3. No rounded containers, no cards — separation is hairlines and whitespace.
      4. Motion is stepped or linear, never eased-smooth decoration.
 
-   THE FIELD, measured rather than picked. #08323e sits at H~197, inside the
-   brand's own hue range (the book places its palette between --jri-cyan at 187
-   and --jri-lavender at 259) and adjacent to the cyan. It is far DARKER than the
-   sky it replaces — L~0.30 against the sky's 0.52 — and that density difference
-   is doing as much differentiating work as the hue is: open daylight versus
-   ink on a desk. Cream on it measures 11.4:1, so every soft tone below has room
-   the sky field never had.
+   THE FIELD, and why it is BRIGHT teal rather than near-black ink.
+
+   The book's governing fact: "sRGB chroma is not uniform across hues... blue is
+   not a weak hue, it is only weak when forced to be LIGHT. At L=0.85 blue caps
+   at C=0.075; at L=0.55 it reaches 0.183." The first version of this file took
+   that as licence to go very dark (L~0.30) and lost the point — at L=0.30 the
+   chroma ceiling is falling again, so the colour was dim AND dull, not deep.
+
+   H~196 is the useful place to stand. Cyan-teal holds chroma much further up the
+   lightness scale than periwinkle does, so it can be genuinely bright and still
+   saturated where the sky's blue could not.
+
+   #0c566e was chosen by measuring six candidates from #08323e up to #0e6f88 and
+   reading the whole ladder, not just the headline number. THE TRADE THE BOOK
+   PREDICTS: a brighter field has less room beneath it. At #0e6f88 cream is still
+   a comfortable 5.69:1 — but every DIMMED tone collapses, soft to 3.76 and faint
+   to 3.20, so the page would have had one legible ink and no hierarchy at all.
+
+     field      cream   amber   soft(.78)  faint(.62)
+     #08323e    13.52   7.71    8.79       6.12      (too dark, the old one)
+     #0c566e     8.08   4.61    5.61       4.17      <- here
+     #0e6f88     5.69   3.25    4.13       3.20      (bright, but no headroom)
+
+   #0c566e is the brightest field that still supports three legible steps. It is
+   markedly lighter than the ink it replaces, and it earns something the sky
+   never had: amber reaches 4.61:1, so the accent can carry SMALL text instead of
+   being confined to headlines.
+
+   It remains clearly NOT the sky: 196 against the sky's 256 is a 60-degree
+   separation, further than any two dayparts are from each other.
 
    Scoped under .lotus-root: the landing route only. The signed-in application
    stays on warm paper, because that is where somebody works rather than where
@@ -42,20 +65,18 @@
    ========================================================================== */
 
 .lotus-root {
-  --lotus-field: #08323e;
+  --lotus-field: #0c566e;
   --lotus-ink: #fffef7;
-  /* Cream on this field is 11.4:1 at full strength, so the soft tone can sit at
-     0.72 and still clear the 4.5:1 body floor with room to spare — the sky field
-     needed 0.86 to manage the same thing. A darker ground buys legibility. */
-  --lotus-ink-soft: rgba(255, 254, 247, 0.72);
-  /* 0.55, not the sky system's 0.34. --lotus-ink-faint carries the quietest
-     LABELS on this page — month headers, sub-captions — and a label is text. At
-     0.42 it measured 3.62:1 here, under the 4.5:1 floor; 0.50 is the minimum
-     that clears it and 0.55 gives 5.14:1, enough margin that the next label
-     someone adds is safe without re-measuring. The hierarchy still reads:
-     13.52 : 7.71 : 5.14 for ink, soft and faint. */
-  --lotus-ink-faint: rgba(255, 254, 247, 0.55);
-  --lotus-hairline: rgba(255, 254, 247, 0.22);
+  /* 0.82 -> 5.9:1. Raised with the field: brightening the ground costs headroom,
+     and these two alphas are where the cost lands. */
+  --lotus-ink-soft: rgba(255, 254, 247, 0.82);
+  /* 0.70 -> ~4.7:1. --lotus-ink-faint carries the quietest LABELS — month
+     headers, sub-captions — and a label is text, so it obeys the 4.5:1 floor
+     like everything else. On this field 0.66 is the minimum; 0.70 leaves margin
+     for the next label somebody adds without re-measuring.
+     The three steps read 8.08 : 5.9 : 4.7. */
+  --lotus-ink-faint: rgba(255, 254, 247, 0.70);
+  --lotus-hairline: rgba(255, 254, 247, 0.26);
   --lotus-amber: #ffb43c;
   --lotus-amber-soft: #ffd08a;
   --lotus-periwinkle: #c1c5ff;
@@ -87,10 +108,10 @@
    THE HEX IS REPEATED HERE ON PURPOSE, and it must stay in step with
    --lotus-field above. `body` is a PARENT of .lotus-root, so it cannot read a
    custom property scoped to it: `var(--lotus-field, …)` resolves to the fallback
-   every single time. Carrying the sky's #0866c9 through from the ported file
+   every single time. Carrying a stale hex through from the ported file
    meant the overscroll gutter flashed the BUSINESS app's blue around an ink
    page — visible the moment anything rubber-banded. */
-body:has(.lotus-root) { background-color: #08323e; }
+body:has(.lotus-root) { background-color: #0c566e; }
 
 /* ---- Type ---------------------------------------------------------------- */
 
@@ -101,18 +122,34 @@ body:has(.lotus-root) { background-color: #08323e; }
   line-height: 1.02;
 }
 
-/* Silkscreen is the 8-bit voice and is for SMALL SIZES ONLY — it has no
-   business setting a sentence. */
-.lotus-root .font-pixel,
+/* THE EYEBROW IS NO LONGER SILKSCREEN, and that is a readability fix.
+   The book calls Silkscreen the 8-bit voice "for micro-labels, small sizes
+   only" — and it is right that it must stay small, but a pixel face at 10px
+   with 0.22em tracking is punishing for anything longer than two words. The
+   worst offender read "FOR CHARTERED ACCOUNTANTS, COMPANY SECRETARIES AND
+   LAWYERS": fifty-six characters of pixel glyphs. So the two jobs are split.
+
+   .lotus-eyebrow — Inter, 11px, semibold, moderate tracking. Carries PHRASES.
+   .lotus-tag     — Silkscreen, for one or two words, where the 8-bit voice is
+                    a texture rather than something you have to parse. */
 .lotus-root .lotus-eyebrow {
+  font-family: "Inter", ui-sans-serif, system-ui, sans-serif;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.13em;
+  text-transform: uppercase;
+  line-height: 1.55;
+  color: var(--lotus-ink-soft);
+}
+
+.lotus-root .font-pixel,
+.lotus-root .lotus-tag {
   font-family: "Silkscreen", ui-monospace, SFMono-Regular, monospace;
   font-weight: 400;
+  font-size: 0.625rem;
+  letter-spacing: 0.16em;
   text-transform: uppercase;
   line-height: 1.6;
-}
-.lotus-root .lotus-eyebrow {
-  font-size: clamp(0.5rem, 0.9vw, 0.625rem);
-  letter-spacing: 0.22em;
   color: var(--lotus-ink-soft);
 }
 
@@ -172,40 +209,30 @@ body:has(.lotus-root) { background-color: #08323e; }
 }
 .lotus-link:hover { background-size: 100% 1.5px; }
 
-/* ---- The ledger ----------------------------------------------------------- */
-/* Replaces the sky. Ruled lines drift UPWARD, slowly, the way paper moves when
-   somebody scrolls a page of accounts — where clouds drift sideways, which is
-   what weather does. Same technique (a 200% track on a linear loop), opposite
-   axis, and that is the point: the motion itself says which product you are on.
+/* ---- The background --------------------------------------------------------
+   THE DRIFTING RULES ARE GONE. They were horizontal hairlines crossing the page
+   behind body copy, and they moved — which is close to the definition of hard to
+   read: a line that sits on the reading line and will not hold still. It looked
+   like paper and behaved like interference.
 
-   Unlike the clouds this CAN sit behind body copy: the rules are 0.09 alpha
-   hairlines, not white shapes, so text over them measures the same as text on
-   the flat field. That is why the ledger runs the full page and the sky could
-   only run the hero. */
-.lotus-ledger {
+   What replaces it is the mark itself, enormous and completely static: the lotus
+   at page scale, bleeding off an edge, at an alpha low enough that nothing ever
+   competes with type. Abstract, unmistakably ours, and it cannot interfere with
+   a line of text because it has no lines.
+
+   The ruled-ledger idea did not die; it moved to where ruling belongs — the
+   diagrams, which ARE grids, and where the rules carry meaning instead of
+   decorating. -------------------------------------------------------------- */
+
+.lotus-watermark {
   position: absolute;
-  inset: 0;
-  z-index: 0;
-  overflow: hidden;
   pointer-events: none;
+  user-select: none;
+  z-index: 0;
+  /* No animation of any kind. This is architecture, not weather. */
 }
 
-.lotus-ledger-track {
-  position: absolute;
-  inset: 0;
-  height: 200%;
-  animation-name: lotus-ledger-drift;
-  animation-timing-function: linear;
-  animation-iteration-count: infinite;
-  will-change: transform;
-}
-
-@keyframes lotus-ledger-drift {
-  from { transform: translate3d(0, 0, 0); }
-  to   { transform: translate3d(0, -50%, 0); }
-}
-
-/* Anything real has to clear the ledger layer at z-index 0. */
+/* Anything real has to clear the watermark layer at z-index 0. */
 .lotus-above { position: relative; z-index: 1; }
 
 /* ---- Drifting sprites ----------------------------------------------------- */

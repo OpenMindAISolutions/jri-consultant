@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import PixelLotus from '../components/lotus/PixelLotus';
-import { LedgerRules } from '../components/lotus/LedgerRules';
+import { LotusWatermark } from '../components/lotus/LotusWatermark';
 import { LotusField } from '../components/lotus/LotusField';
 import { Reveal } from '../components/lotus/Reveal';
 import { BookSplit, FunnelFlow, GrantGrid, RuleFanout } from '../components/lotus/diagrams';
@@ -79,11 +79,6 @@ function SectionHead({ eyebrow, title }: { eyebrow: string; title: string }) {
 export default function Landing() {
   return (
     <div className="lotus-root min-h-screen">
-      {/* The ledger runs the WHOLE page, which the sky never could: these are
-          0.09-alpha hairlines rather than white shapes, so body copy over them
-          measures the same as body copy on the flat field. */}
-      <LedgerRules />
-
       <div className="lotus-above">
         {/* ── Nav ─────────────────────────────────────────────────────────── */}
         <header
@@ -101,7 +96,8 @@ export default function Landing() {
         </header>
 
         {/* ── Hero ────────────────────────────────────────────────────────── */}
-        <section className="relative" style={{ padding: 'clamp(3rem,8vw,6rem) var(--lotus-gutter) clamp(3rem,7vw,6rem)' }}>
+        <section className="relative overflow-hidden" style={{ padding: 'clamp(3rem,8vw,6rem) var(--lotus-gutter) clamp(3rem,7vw,6rem)' }}>
+          <LotusWatermark side="right" size={640} top="-14%" opacity={0.055} />
           {/* Three sprites, not seven. The book's figure for a surface that is not
               a hero sky, and on ruled paper a crowd of them would read as clutter. */}
           <LotusField count={3} seed={23} avoidBand={[0.2, 0.85]} />
@@ -143,9 +139,10 @@ export default function Landing() {
         </section>
 
         {/* ── The claim, then the claim drawn ─────────────────────────────── */}
-        <section style={{ padding: 'var(--lotus-section) var(--lotus-gutter)' }}>
+        <section className="relative overflow-hidden" style={{ padding: 'var(--lotus-section) var(--lotus-gutter)' }}>
+          <LotusWatermark side="left" size={520} top="18%" opacity={0.04} />
           <hr className="lotus-rule" />
-          <Reveal>
+          <Reveal className="lotus-above">
             <h2
               className="font-display mt-12 max-w-4xl"
               style={{ fontSize: 'clamp(2rem,5.6vw,4.5rem)', lineHeight: 0.99 }}
@@ -199,8 +196,9 @@ export default function Landing() {
         </section>
 
         {/* ── The boundary, drawn ─────────────────────────────────────────── */}
-        <section style={{ padding: 'var(--lotus-section) var(--lotus-gutter)' }}>
-          <Reveal>
+        <section className="relative overflow-hidden" style={{ padding: 'var(--lotus-section) var(--lotus-gutter)' }}>
+          <LotusWatermark side="right" size={560} top="6%" opacity={0.045} />
+          <Reveal className="lotus-above">
             <SectionHead eyebrow="Where the line is" title="You are a guest in their books, and it stays that way" />
             <GrantGrid />
             {/* The operating principle goes where the limits are described. The

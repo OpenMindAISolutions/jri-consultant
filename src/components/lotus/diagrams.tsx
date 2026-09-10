@@ -113,7 +113,7 @@ export function GrantGrid() {
           <div className="grid" style={{ gridTemplateColumns: '8.5rem repeat(8, 1fr)', gap: '0.35rem' }}>
             <span />
             {MONTHS.map((m) => (
-              <span key={m} className="lotus-eyebrow text-center" style={{ color: 'var(--lotus-ink-faint)' }}>
+              <span key={m} className="lotus-tag block text-center" style={{ color: 'var(--lotus-ink-faint)' }}>
                 {m}
               </span>
             ))}
@@ -156,7 +156,7 @@ export function RuleFanout() {
       <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:gap-8">
         {/* The rule, as one object. */}
         <div className="shrink-0" style={{ border: '1px solid var(--lotus-hairline)', padding: '0.9rem 1.1rem' }}>
-          <p className="lotus-eyebrow" style={{ color: 'var(--lotus-amber)' }}>The rule</p>
+          <p className="lotus-tag" style={{ color: 'var(--lotus-amber)' }}>The rule</p>
           <p className="font-display mt-2" style={{ fontSize: '1.35rem' }}>GSTR-3B</p>
           <p className="mt-1 text-[0.6875rem] leading-relaxed" style={{ color: 'var(--lotus-ink-soft)' }}>
             CGST Rules r.61(1)
@@ -173,7 +173,7 @@ export function RuleFanout() {
           <div className="grid grid-cols-6 gap-1.5 sm:grid-cols-12">
             {YEAR.map(([m, d]) => (
               <div key={m} style={{ border: '1px solid var(--lotus-hairline)', padding: '0.4rem 0.2rem' }}>
-                <p className="lotus-eyebrow text-center" style={{ color: 'var(--lotus-ink-faint)' }}>{m}</p>
+                <p className="lotus-tag text-center" style={{ color: 'var(--lotus-ink-faint)' }}>{m}</p>
                 <p className="text-center text-[0.8125rem] font-semibold" style={{ color: 'var(--lotus-amber)' }}>
                   {d}
                 </p>
@@ -214,7 +214,7 @@ export function FunnelFlow() {
       <div className="grid grid-cols-1 sm:grid-cols-4">
         {STAGES.map((s, i) => (
           <div key={s.k} className="relative py-8 sm:pr-8">
-            <p className="lotus-eyebrow" style={{ color: 'var(--lotus-amber)' }}>{`0${i + 1}`}</p>
+            <p className="lotus-tag" style={{ color: 'var(--lotus-amber)' }}>{`0${i + 1}`}</p>
             <p className="font-display mt-3" style={{ fontSize: '1.35rem' }}>{s.k}</p>
             <p className="mt-1.5 text-[0.8125rem] leading-relaxed" style={{ color: 'var(--lotus-ink-soft)' }}>
               {s.line}
