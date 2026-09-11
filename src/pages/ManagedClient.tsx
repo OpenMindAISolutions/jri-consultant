@@ -6,9 +6,9 @@ import {
 } from 'lucide-react';
 import {
   addReminder, archiveClient, cancelReminder, managedClientDetail, myPaymentDetails, saveClient,
-  signedFileUrl, uploadClientFile, convertClient, prettyBytes, generateCalendar, OBLIGATION_TAGS,
+  signedFileUrl, uploadClientFile, convertClient, prettyBytes,
   obligationCatalogue,
-  type GeneratedCalendar, type ManagedClientDetail, type ObligationRow, type PaymentDetails,
+  type ManagedClientDetail, type ObligationRow, type PaymentDetails,
   type SaveClientInput,
 } from '../lib/funnel';
 import { myClients, myFirm, type Client, type MyFirm } from '../lib/api';
@@ -150,7 +150,7 @@ export default function ManagedClient() {
             phone={c.phone_e164}
           />
 
-          <ComplianceCalendar client={c} onChange={load} onError={setError} />
+          <ComplianceCalendar />
 
           <Files
             clientId={c.id} files={d.files}
@@ -457,186 +457,37 @@ function Reminders({
 // ── The compliance calendar ─────────────────────────────────────────────────
 
 /**
- * Fill a year of statutory dates in one press.
- *
- * WHAT THE CHECKBOXES ARE FOR, AND WHY THEY ARE NOT OPTIONAL CLEVERNESS. Two of these can be
- * inferred from the record — a GSTIN means GST-registered, and the entity type separates a company
- * from a proprietor — and they are ticked for you. The rest cannot be inferred by anything: nothing
- * in a client record says whether they deduct TDS or employ twenty people on PF. Guessing them would
- * fill a shopkeeper's calendar with payroll deadlines, and a consultant who sees one obligation that
- * obviously does not apply stops trusting the twenty that do.
- *
- * THE LINE ABOUT EXTENSIONS IS LOAD-BEARING. Every date here is the one the statute fixes. CBIC and
- * CBDT push deadlines by notification most years, and nothing in this product tracks a notification.
- * Saying so on the button is the difference between a tool that is precise about its limits and one
- * that quietly misleads on the years when a date moves.
+ * Read-only statutory reference. Applicability, legal dates and published rules are admin-owned.
+ * Existing practice reminders and messaging remain separate from the compliance engine.
  */
-function ComplianceCalendar({
-  client: c, onChange, onError,
-}: {
-  client: ManagedClientDetail['client'];
-  onChange: () => Promise<void>;
-  onError: (m: string) => void;
-}) {
-  const today = new Date();
-  const iso = (d: Date) => d.toISOString().slice(0, 10);
-
-  // Derived exactly the way the server derives them when no tags are passed, so the boxes a
-  // consultant sees ticked match what they would have got by not choosing at all.
-  const derived = useMemo(() => {
-    const t: string[] = [];
-    if (c.gstin) t.push('gst_regular');
-    t.push(['private_limited', 'public_limited', 'opc', 'company'].includes(c.entity_type ?? '')
-      ? 'company' : 'individual_or_firm');
-    return t;
-  }, [c.gstin, c.entity_type]);
-
-  const [tags, setTags] = useState<string[]>(derived);
-  const [from, setFrom] = useState(iso(today));
-  const [to, setTo] = useState(iso(new Date(today.getFullYear() + 1, today.getMonth(), today.getDate())));
-  const [busy, setBusy] = useState(false);
-  const [result, setResult] = useState<GeneratedCalendar | null>(null);
+function ComplianceCalendar() {
   const [open, setOpen] = useState(false);
   const [catalogue, setCatalogue] = useState<ObligationRow[] | null>(null);
-
-  // Loaded when the panel is opened, not on mount: most visits to a client screen are not about
-  // the calendar, and this is reference data that changes when a statute does.
+  const [error, setError] = useState<string | null>(null);
   useEffect(() => {
-    if (!open || catalogue) return;
-    void obligationCatalogue().then(setCatalogue).catch(() => { /* the preview simply stays hidden */ });
-  }, [open, catalogue]);
-
-  /**
-   * What is about to be added, before it is added.
-   *
-   * The matching rule is the server's, restated: an obligation with no tags applies to everybody,
-   * otherwise it needs one of the ticks. Reading the count back from the real catalogue also
-   * quietly cross-checks the tag list hard-coded in this app against the one in the database — if
-   * they ever drift, this number goes wrong in a place somebody is looking at.
-   */
-  const matching = useMemo(() => {
-    if (!catalogue) return null;
-    return catalogue.filter(
-      (o) => o.applies_when.length === 0 || o.applies_when.some((t) => tags.includes(t)),
-    );
-  }, [catalogue, tags]);
-
-  const run = async () => {
-    if (tags.length === 0) { onError('Tick at least one thing that applies to them.'); return; }
-    setBusy(true);
-    setResult(null);
-    try {
-      const r = await generateCalendar(c.id, from, to, tags);
-      setResult(r);
-      await onChange();
-    } catch (e) {
-      onError(e instanceof Error ? e.message : 'Could not build that calendar.');
-    } finally {
-      setBusy(false);
-    }
-  };
-
+    if (!open) return;
+    let cancelled = false;
+    setError(null);
+    void obligationCatalogue().then(rows => { if (!cancelled) setCatalogue(rows); })
+      .catch(() => { if (!cancelled) setError('Could not load the rule reference. Close and reopen to retry.'); });
+    return () => { cancelled = true; };
+  }, [open]);
   return (
-    <Section
-      title="Compliance calendar"
-      subtitle="Fill their statutory dates from the rule book instead of typing them in."
+    <Section title="Compliance reference" subtitle="Read-only. JRI admins own rules and applicability."
       icon={<ScrollText className="h-4 w-4" />}
-      actions={
-        <Button size="sm" onClick={() => setOpen((v) => !v)}>{open ? 'Close' : 'Set it up'}</Button>
-      }
-    >
-      {!open ? (
-        <p className="text-sm leading-relaxed text-muted-foreground">
-          GST, TDS, payroll, advance tax and ROC dates, generated for the period you choose. Running it
-          again later never duplicates anything.
-        </p>
-      ) : (
-        <div className="space-y-4">
-          <div>
-            <p className="mb-2 text-[11.5px] font-medium text-muted-foreground">What applies to them?</p>
-            <div className="grid gap-1.5 sm:grid-cols-2">
-              {OBLIGATION_TAGS.map((t) => (
-                <label key={t.id} className="flex items-start gap-2 rounded-lg border border-border px-2.5 py-2">
-                  <input
-                    type="checkbox" className="mt-0.5" checked={tags.includes(t.id)}
-                    onChange={(e) => setTags((prev) =>
-                      e.target.checked ? [...prev, t.id] : prev.filter((x) => x !== t.id))}
-                  />
-                  <span className="min-w-0">
-                    <span className="block text-[11.5px] font-medium">{t.label}</span>
-                    <span className="block text-[10.5px] leading-relaxed text-muted-foreground">{t.hint}</span>
-                  </span>
-                </label>
-              ))}
-            </div>
-            {derived.length > 0 && (
-              <p className="mt-2 text-[10.5px] text-muted-foreground">
-                Ticked from what you already recorded: {derived.join(', ').replace(/_/g, ' ')}. The rest
-                are things only you know.
-              </p>
-            )}
-          </div>
-
-          <div className="grid gap-3 sm:grid-cols-2">
-            <Field label="From"><input type="date" className={fieldClass} value={from}
-                                       onChange={(e) => setFrom(e.target.value)} /></Field>
-            <Field label="To" hint="Up to 18 months at a time."><input type="date" className={fieldClass}
-                                     value={to} onChange={(e) => setTo(e.target.value)} /></Field>
-          </div>
-
-          {matching && (
-            <details className="rounded-xl border border-border px-3 py-2">
-              <summary className="cursor-pointer text-[11.5px] text-muted-foreground transition hover:text-foreground">
-                {matching.length} obligation{matching.length === 1 ? '' : 's'} apply — see which
-              </summary>
-              <ul className="mt-2 space-y-1.5">
-                {matching.map((o) => (
-                  <li key={o.key}>
-                    <p className="text-[11.5px] font-medium">{o.label}</p>
-                    <p className="text-[10.5px] leading-relaxed text-muted-foreground">{o.authority}</p>
-                    {o.note && (
-                      <p className="mt-0.5 text-[10.5px] leading-relaxed"
-                         style={{ color: 'hsl(var(--status-warn))' }}>{o.note}</p>
-                    )}
-                  </li>
-                ))}
-              </ul>
-            </details>
-          )}
-
-          <div className="flex flex-wrap items-center gap-2">
-            <Button tone="primary" busy={busy} onClick={() => void run()}>Fill the calendar</Button>
-            <span className="text-[10.5px] leading-relaxed text-muted-foreground">
-              These are the dates the law fixes. Extensions announced by CBIC or CBDT are not tracked.
-            </span>
-          </div>
-
-          {result && (
-            <div className="rounded-xl border border-border p-3">
-              <p className="text-xs font-medium">
-                {result.created === 0
-                  ? `Nothing new — all ${result.skipped} of those were already on the calendar.`
-                  : `Added ${result.created} date${result.created === 1 ? '' : 's'}${result.skipped ? `, skipped ${result.skipped} already there` : ''}.`}
-              </p>
-              {result.items.length > 0 && (
-                <ul className="mt-2 space-y-1">
-                  {result.items.slice(0, 8).map((i) => (
-                    <li key={`${i.key}-${i.period}`} className="flex items-center justify-between gap-2 text-[11px]">
-                      <span className="min-w-0 truncate text-muted-foreground">{i.title}</span>
-                      <span className="shrink-0 tabular-nums">{when(i.due_date)}</span>
-                    </li>
-                  ))}
-                  {result.items.length > 8 && (
-                    <li className="text-[10.5px] text-muted-foreground">
-                      …and {result.items.length - 8} more, all listed under Reminders above.
-                    </li>
-                  )}
-                </ul>
-              )}
-            </div>
-          )}
-        </div>
-      )}
+      actions={<Button size="sm" onClick={() => setOpen(v => !v)}>{open ? 'Close' : 'View reference'}</Button>}>
+      <p className="text-sm leading-relaxed text-muted-foreground">
+        Consultants cannot change compliance rules, map activities or generate statutory dates.
+        Existing practice reminders are unchanged. This legacy reference is not a verified client-specific
+        compliance assessment and may not include notification-based deadline extensions.
+      </p>
+      {open && (error ? <p role="alert" className="mt-3 text-sm text-red-600">{error}</p>
+        : !catalogue ? <p className="mt-3 text-sm text-muted-foreground">Loading reference…</p>
+        : <ul className="mt-3 space-y-2">{catalogue.map(rule => <li key={rule.key} className="rounded-lg border border-border p-3">
+          <p className="text-sm font-medium">{rule.label}</p>
+          <p className="text-xs text-muted-foreground">{rule.authority}</p>
+          {rule.note && <p className="mt-1 text-xs text-muted-foreground">{rule.note}</p>}
+        </li>)}</ul>)}
     </Section>
   );
 }
